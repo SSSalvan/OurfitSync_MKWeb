@@ -1,0 +1,239 @@
+/* File: page-style/save-calendar.css */
+/* Uses global colors from style.css:
+   beige: #F9F6F2, pink: #FFD1D2, pink light: #FFE4E4
+*/
+
+#sidebar-container {
+  display: none !important;
+}
+
+.save-calendar-page {
+  min-height: 100vh;
+  background-color: #f9f6f2;
+  padding: 40px 60px 120px 180px;
+  font-family: "Poppins", sans-serif;
+  color: #000;
+
+  /* NEW: center the cards vertically */
+  display: flex;
+  flex-direction: column;
+}
+
+.sc-topbar {
+  margin-bottom: 20px;
+}
+
+.sc-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1.2fr);
+  gap: 3rem;
+
+  /* NEW: let it fill the space and center contents vertically */
+  flex: 1;
+  align-items: center;
+}
+
+.backBtn img.back-icon {
+  width: 50px;
+  height: 50px;
+  object-fit: contain;
+  cursor: pointer;
+  padding: 0.2rem 0.5rem;
+  color: #000;
+}
+
+.backBtn {
+  background: transparent;
+  border: none;
+  padding: 0; /* remove spacing */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+/* calendar card */
+.sc-calendar-card {
+  background-color: #FFE4E4;
+  border-radius: 18px;
+  padding: 24px 32px 32px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+}
+
+.sc-calendar-header h2 {
+  font-size: 1rem;
+  text-align: center;
+  margin-bottom: 14px;
+}
+
+.sc-calendar-month-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 32px;
+  margin-bottom: 18px;
+}
+
+.sc-month-label {
+  font-weight: 600;
+}
+
+.sc-month-btn {
+  border: none;
+  background: transparent;
+  font-size: 2rem;
+  cursor: pointer;
+}
+
+/* weekdays row */
+.sc-calendar-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  font-size: 0.8rem;
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.sc-calendar-weekdays span {
+  opacity: 0.8;
+}
+
+.sc-calendar-days {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  row-gap: 25px;         /* more vertical spacing */
+  column-gap: 10px;      /* a bit more horizontal breathing room */
+  font-size: 0.85rem;
+  padding: 75px 4px 14px; /* extra top/bottom spacing inside the grid */
+}
+
+.sc-day {
+  text-align: center;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  padding: 6px 6px 60px;  /* a bit bigger hitbox */
+}
+
+.sc-day--disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+.sc-day--current {
+  opacity: 0.85;
+}
+
+.sc-day--current:hover {
+  transform: translateY(-1px);
+}
+
+.sc-day.is-selected {
+  background-color: #ffd1d2;   /* same pink as Save button */
+  border-radius: 10px;         /* rounded square */
+  box-shadow: none;
+  color: #000;
+}
+
+/* right panel */
+.sc-right-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+/* time card */
+.sc-time-card,
+.sc-occasion-card {
+  background-color: #FFE4E4;
+  border-radius: 16px;
+  padding: 16px 24px;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.08);
+}
+
+.sc-time-label,
+.sc-occasion-label {
+  font-weight: 600;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.sc-time-options {
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+}
+
+.sc-time-btn {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: none;
+  background-color: #f9f6f2;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+
+.sc-time-btn img.sc-time-icon {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+}
+
+.sc-time-btn.is-selected {
+  background-color: #FD9495;
+  transform: translateY(-2px);
+}
+
+
+/* occasion input */
+.sc-occasion-input {
+  width: 100%;
+  border: none;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.3);
+  background: transparent;
+  padding: 8px 4px 4px;
+  font-size: 0.95rem;
+  outline: none;
+}
+
+/* bottom save button */
+.sc-actions {
+  margin-top: 16px;
+  display: flex;
+  justify-content: center;
+}
+
+.sc-save-btn {
+  min-width: 260px;
+  padding: 0.9rem 2rem;
+  border-radius: 16px;
+  border: none;
+  background-color: #ffd1d2;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.sc-save-btn:hover {
+  background-color: #f3bfc0;
+  transform: translateY(-1px);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.22);
+}
+
+/* responsive */
+@media (max-width: 1100px) {
+  .save-calendar-page {
+    padding: 24px 16px 120px 120px;
+  }
+
+  .sc-main {
+    grid-template-columns: 1fr;
+  }
+}

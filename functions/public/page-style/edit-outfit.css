@@ -1,0 +1,280 @@
+/* File: page-style/edit-outfit.css */
+
+/* hide sidebar just on this page */
+#sidebar-container {
+  display: none !important;
+}
+
+.edit-outfit-page {
+  min-height: 100vh;
+  background-color: #f9f6f2;
+  padding: 40px 40px 120px;
+  color: #000;
+  font-family: "Poppins", sans-serif;
+}
+
+/* ---------- TOP BAR ---------- */
+.eo-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  margin-bottom: 32px;
+}
+
+.eo-back-btn {
+  position: absolute;
+  left: 0;
+  border: none;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.eo-back-icon {
+  width: 46px;
+  height: 46px;
+  object-fit: contain;
+}
+
+.eo-title {
+  font-size: 1.6rem;
+  letter-spacing: 0.14em;
+  font-weight: 600;
+}
+
+/* ---------- MAIN LAYOUT ---------- */
+.eo-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1.2fr);
+  gap: 3rem;
+}
+
+/* ---------- LEFT: OUTFIT GRID ---------- */
+.eo-left {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.2rem;
+}
+
+.eo-outfit-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: repeat(2, minmax(0, 1fr));
+  gap: 1.4rem;
+  width: 100%;
+  max-width: 380px;
+}
+
+.eo-slot {
+  background-color: #f3dbdc;
+  border-radius: 18px;
+  padding: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
+}
+
+.eo-slot img {
+  width: 100%;
+  height: 160px;
+  object-fit: contain;
+}
+
+.eo-slot-label {
+  margin-top: 0.4rem;
+  font-size: 0.85rem;
+}
+
+/* heart */
+.eo-like-btn {
+  border: none;
+  background: transparent;
+  font-size: 1.6rem;
+  cursor: pointer;
+}
+
+/* ---------- RIGHT SIDE ---------- */
+.eo-right {
+  display: flex;
+  flex-direction: column;
+  gap: 1.6rem;
+}
+
+/* Date row */
+.eo-date-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.eo-weekday-label {
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.eo-date-label {
+  margin-top: 0.1rem;
+  font-size: 0.95rem;
+}
+
+.eo-date-icons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.eo-icon-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 18px;
+  border: none;
+  background-color: #ffe7e7;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  cursor: pointer;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
+}
+
+/* WEEK STRIP */
+.eo-week-strip {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.04);
+}
+
+.eo-week-cell {
+  background-color: #f9f6f2;
+  border: 1px solid #e6d8d8;
+  padding: 0.55rem 0.35rem 0.6rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.eo-week-label-row {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.eo-week-name {
+  font-size: 0.9rem;
+  text-decoration: underline;
+}
+
+.eo-week-flame {
+  font-size: 0.8rem;
+  /* placeholder “flame” */
+}
+
+.eo-week-number {
+  font-size: 0.95rem;
+}
+
+/* selected day – pink pill */
+.eo-week-cell.is-selected .eo-week-number {
+  background-color: #ffd1d2;
+  border-radius: 999px;
+  padding: 0.1rem 0.7rem;
+}
+
+/* ---------- TIME ICONS ---------- */
+.eo-time-section {
+  margin-top: 0.4rem;
+}
+
+.eo-section-title {
+  font-size: 0.95rem;
+  margin-bottom: 0.4rem;
+}
+
+.eo-time-buttons {
+  display: flex;
+  gap: 0.9rem;
+}
+
+.eo-time-btn {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: none;
+  background-color: #fff;
+  box-shadow: 0 4px 9px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.eo-time-btn img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+
+.eo-time-btn.is-selected {
+  background-color: #ffd1d2;
+}
+
+/* ---------- OCCASION ---------- */
+.eo-occasion-section {
+  margin-top: 0.6rem;
+}
+
+.eo-occasion-text {
+  font-size: 0.95rem;
+  text-align: center;
+}
+
+/* ---------- ACTION BUTTONS ---------- */
+.eo-actions {
+  margin-top: 1.4rem;
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.eo-edit-btn,
+.eo-delete-btn {
+  min-width: 110px;
+  border-radius: 999px;
+  border: none;
+  padding: 0.7rem 1.6rem;
+  font-size: 0.95rem;
+  cursor: pointer;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.12);
+}
+
+.eo-edit-btn {
+  background-color: #ffd1d2;
+}
+
+.eo-edit-btn:hover {
+  background-color: #f3bfc0;
+}
+
+.eo-delete-btn {
+  background-color: #ffe7e7;
+}
+
+/* ---------- RESPONSIVE ---------- */
+@media (max-width: 1024px) {
+  .edit-outfit-page {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+  .eo-main {
+    grid-template-columns: 1fr;
+  }
+  .eo-right {
+    order: 2;
+  }
+}

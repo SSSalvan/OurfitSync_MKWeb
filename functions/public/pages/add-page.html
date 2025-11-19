@@ -1,0 +1,68 @@
+<div class="add-page-wrapper">
+    <h1 class="page-header-title">OUTFITSYNC</h1>
+
+    <main class="card-container">
+        
+        <section id="step-1" class="outfit-step active">
+            <div class="step-content centered">
+                <p class="step-subtitle">Upload your new outfit</p>
+                
+                <div class="upload-area" id="trigger-upload-area">
+                    <div class="icon-circle">
+                        <img src="images/add-icon.png" alt="Upload" class="upload-icon-img">
+                    </div>
+                </div>
+
+                <p class="step-text-small">Mulai dari galeri</p>
+                
+                <button class="btn-white" id="upload-btn-trigger">Photo/Link drive</button>
+            </div>
+        </section>
+
+        <section id="step-2" class="outfit-step">
+            <div class="step-content centered">
+                <p class="step-subtitle">Scan your outfit here</p>
+                
+                <div class="image-preview-box">
+                    <img id="outfit-image-preview" src="" alt="Preview" class="preview-img">
+                </div>
+
+                <p class="scanning-text">Scanning...</p>
+
+                <button class="btn-pink next-step-btn" data-target="step-3" style="margin-top: 20px;">Next</button>
+            </div>
+        </section>
+
+        <section id="step-3" class="outfit-step">
+            <div class="step-content split-layout">
+                <p class="step-subtitle full-width">Scan completed!</p>
+                
+                <div class="left-side">
+                    <img id="outfit-image-final" src="" alt="Final" class="final-img">
+                </div>
+
+                <div class="right-side">
+                    <div class="input-group">
+                        <select id="outfit-type" class="input-style" required>
+                            <option value="" disabled selected>Select Type</option>
+                            <option value="top">Top (Atasan)</option>
+                            <option value="bottom">Bottom (Bawahan)</option>
+                            <option value="shoes">Shoes (Sepatu)</option>
+                            <option value="bag">Bag (Tas)</option>
+                        </select>
+                    </div>
+
+                    <div class="input-group">
+                        <input type="text" id="outfit-color" class="input-style" placeholder="Color (e.g. Red)" required>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button class="btn-pink" id="save-outfit-btn">Done</button>
+                        <button class="btn-text back-step-btn" data-target="step-2">Back</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+</div>

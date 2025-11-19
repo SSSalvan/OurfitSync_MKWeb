@@ -1,0 +1,185 @@
+:root {
+  --page-bg: #ffeef0;
+  --panel: #ffffff;
+  --muted: #6b6b6b;
+  --accent-pink: #ffbfc6;
+  --accent-blue: #cfe9ff;
+  --shadow: 0 12px 40px rgba(10,10,20,0.10);
+  font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+html, body { height: 100%; }
+
+body {
+  margin: 0;
+  background: var(--page-bg);
+  min-height: 100vh;
+  transition: background 220ms ease;
+}
+
+/* Background icons */
+.bg-icon {
+  position: fixed;
+  z-index: 40;
+  background: transparent;
+  border: none;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.bg-icon.left { left: 20px; top: 20px; }
+.bg-icon.right { right: 20px; top: 20px; }
+.bg-icon img { width: 20px; height: 20px; }
+
+/* Card */
+.card {
+  width: 76%;
+  max-width: 980px;
+  min-width: 520px;
+  background: var(--panel);
+  position: fixed;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  padding: 56px;
+  border-radius: 20px 20px 34px 34px;
+  box-shadow: var(--shadow);
+}
+
+/* Avatar */
+.avatar-wrap {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  top: -110px;
+  width: 220px;
+  height: 220px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatar-disk {
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  background: var(--panel);
+  box-shadow: 0 22px 48px rgba(0,0,0,0.10);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.avatar-img {
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+/* Edit badge */
+.edit-badge {
+  position: absolute;
+  right: -12px;
+  bottom: -12px;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 6px solid rgba(255,255,255,0.95);
+  cursor: pointer;
+  box-shadow: 0 12px 28px rgba(0,0,0,0.12);
+}
+
+.edit-badge img { width: 34px; height: 34px; }
+
+/* Layout */
+.grid { display: grid; grid-template-columns: 1fr 300px; gap: 28px; }
+label { display: block; font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+input, select {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #e7e7e7;
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
+/* Theme */
+.theme-box {
+  padding: 8px 18px;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+.swatches { display: flex; gap: 16px; }
+.swatch {
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  cursor: pointer;
+}
+.swatch.pink { background: var(--accent-pink); }
+.swatch.blue { background: var(--accent-blue); }
+.swatch.selected { transform: scale(1.18); border: 4px solid #fff; }
+
+.controls { display: flex; gap: 12px; }
+.btn {
+  padding: 8px 18px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-weight: 600;
+}
+.btn.cancel { background: #fff; border: 1px solid #e6e6e6; }
+.btn.save { background: linear-gradient(180deg,#ffd7dc,#ffbfc6); }
+
+.theme-pink .btn.save {
+  padding: 14px 28px;
+  font-size: 16px;
+  background: linear-gradient(180deg,#ffb6c0,#ff98a6);
+}
+
+.theme-blue .btn.save {
+  padding: 10px 22px;
+  background: linear-gradient(180deg,#d9f0ff,#bfe9ff);
+}
+
+.error {
+  color: #b00020;
+  font-size: 13px;
+  margin-top: -8px;
+  margin-bottom: 12px;
+  display: none;
+}
+
+@media (max-width: 1000px) {
+  .card { width: 92%; padding: 28px; }
+  .grid { grid-template-columns: 1fr; }
+  .avatar-wrap {
+    top: -40px;
+    width: 50px;
+    height: 50px;
+  }
+
+  .avatar-disk {
+    width: 50px;
+    height: 50px;
+  }
+
+  .avatar-img {
+    width: 50px;
+    height: 50px;
+  }
+}
+
+/* CATATAN: Ada media query yang salah ketik/tidak lengkap
+  dan satu '}' ekstra di file asli Anda.
+  Saya telah menghapusnya agar file ini valid.
+*/

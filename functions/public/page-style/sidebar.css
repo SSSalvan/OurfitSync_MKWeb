@@ -1,0 +1,216 @@
+/* File: components/sidebar.css */
+:root {
+  --bg: #faf6f4;
+  --capsule: #e9a2a4;
+  --panel: #f4d8da;
+  --shadow-strong: 0 18px 30px rgba(0, 0, 0, 0.08);
+  --shadow-soft: 0 8px 18px rgba(0, 0, 0, 0.06);
+  --wrap-left: 20px;
+  --wrap-top: 120px;
+  --panel-overlap: -16px;
+  --spot-size: 62px;
+  --gap: 26px;
+  --sidebar-width: 140px; /* Lebar area sidebar */
+}
+
+/* Logo di tengah atas */
+.page-header {
+  position: fixed;
+  top: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  z-index: 200;
+  width: auto;
+}
+
+.main-logo {
+  width: auto;
+  height: auto;
+  max-width: 50%;
+  display: inline-block;
+}
+
+/* Tombol Nanya */
+.corner-icon {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  width: 50px;
+  height: auto;
+  z-index: 300;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+.corner-icon:hover {
+  transform: scale(1.05);
+}
+
+/* Wrapper Sidebar */
+.sidebar-wrap {
+  position: fixed;
+  left: var(--wrap-left);
+  top: var(--wrap-top);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  z-index: 100;
+}
+
+/* === CAPSULE BUTTON (OS + ARROW) === */
+.capsule {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px 20px;
+  background: #f6dcde;
+  color: white;
+  font-weight: 700;
+  border-radius: 25px;
+  box-shadow: var(--shadow-strong);
+  cursor: pointer;
+  user-select: none;
+  position: relative;
+  z-index: 120;
+  transition: background 200ms ease, transform 200ms ease;
+}
+
+.capsule:active {
+  transform: translateY(2px) scale(0.997);
+}
+
+/* hover = pink */
+.capsule:hover {
+  background: #e8a7a9;
+}
+
+/* ketika di-click & ditahan (state selected dari JS) */
+.capsule.selected {
+  background: #e8a7a9 !important;
+  transform: scale(0.97);
+}
+
+/* (kalau masih pakai .chev SVG, ini opsional) */
+.capsule .chev {
+  width: 20px;
+  height: 20px;
+  position: absolute;
+  right: 18px;
+  top: 50%;
+  transform: translateY(-50%) rotate(180deg);
+  transition: transform 240ms ease;
+}
+
+.capsule.open .chev {
+  transform: translateY(-50%) rotate(90deg);
+}
+
+.capsule.open {
+  transform: translateY(2px) scale(0.97);
+}
+
+/* Logo "OS" di dalam capsule */
+.logo-small {
+  height: 60px;
+  width: auto;
+  filter: drop-shadow(0px 2px 4px rgba(0, 0, 0, 0.08));
+  margin-bottom: 10px;
+  margin-right: 5px;
+}
+
+/* Arrow icon dari images/arrow.png */
+.arrow-icon {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  position: absolute;
+  right: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+  transition: transform 0.3s ease;
+}
+
+.capsule.open .arrow-icon {
+  transform: translateY(-50%) rotate(-90deg);
+}
+
+/* === DROPDOWN PANEL ANIMATION === */
+.panel {
+  width: 92px;
+  background: linear-gradient(180deg, var(--panel), #f6dcde);
+  border-radius: 18px;
+  box-shadow: var(--shadow-soft);
+  padding: 24px 12px;
+  margin-top: var(--panel-overlap);
+  position: relative;
+  z-index: 90;
+  right: -30px;
+
+  transform-origin: top center;
+  transform: translateY(-20px);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.35s cubic-bezier(0.2, 0.9, 0.2, 1), opacity 0.3s ease;
+}
+
+.sidebar-wrap.active .panel {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+/* === ITEMS & SPOTLIGHT === */
+.items {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--gap);
+  padding: 8px 0;
+  position: relative;
+}
+
+.spotlight {
+  position: absolute;
+  left: 50%;
+  transform: translate(-50%, 0) scale(1);
+  width: var(--spot-size);
+  height: var(--spot-size);
+  border-radius: 50%;
+  background: #ffb9ba;
+  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.12);
+  transition: top 420ms cubic-bezier(0.2, 0.9, 0.2, 1);
+  pointer-events: none;
+  z-index: 75;
+  opacity: 0;
+}
+
+.sidebar-wrap.active .spotlight {
+  opacity: 1;
+  transition-delay: 0.15s;
+}
+
+/* Tombol bulat */
+.item {
+  width: var(--spot-size);
+  height: var(--spot-size);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  cursor: pointer;
+  border: none;
+  z-index: 76;
+  transition: transform 260ms cubic-bezier(0.2, 0.9, 0.2, 1);
+}
+
+.item img {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+}
+
+/* Jangan geser Y lagi supaya tetap align dengan bubble */
+.item.active {
+  transform: scale(1.04); /* efek subtle tapi tidak mengubah posisi vertikal */
+}

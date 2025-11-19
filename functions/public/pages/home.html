@@ -1,0 +1,57 @@
+<section class="home-page" id="home-page">
+  <div class="home-content">
+    <main class="homepage">
+      <section class="greeting">
+        <div class="user-info">
+          <img 
+            src="images/profile.png" 
+            alt="profile" 
+            class="profile-img" 
+            id="home-user-avatar" 
+          />
+          <div>
+            <h2 id="home-user-name">Hello, Loading...</h2>
+            <p class="small">What style are you feeling today?</p>
+          </div>
+        </div>
+
+        <div class="date-box">
+          <div class="date">
+            <span class="date-main">
+              <span class="date-day">Sat</span> <strong>Feb 14</strong> Today
+            </span>
+            <span class="temp" id="weather">Loading</span>
+          </div>
+
+          <!-- white square button -->
+          <button
+            class="calendar-launch"
+            id="home-calendar-btn"
+            aria-label="Open calendar"
+            type="button"
+          >
+            <div class="calendar-square">
+              <img src="images/calendar-button.png" alt="Calendar" class="calendar-icon-img" />
+            </div>
+          </button>
+        </div>
+      </section>  <!-- ✅ CLOSE GREETING SECTION HERE -->
+
+      <section class="section">
+        <h3>Your top picks</h3>
+        <div class="item-row" id="top-picks-container"></div>
+        <p id="top-picks-empty" class="empty-list-message" style="display: none;">
+          You have no top picks yet. Like some items to see them here!
+        </p>
+      </section>
+      
+      <section class="section">
+        <h3>Recently added items</h3>
+        <div class="item-row" id="recently-added-container"></div>
+        <p id="recently-added-empty" class="empty-list-message" style="display: none;">
+          Your wardrobe is empty. Add some items!
+        </p>
+      </section>
+    </main>
+  </div>
+</section>

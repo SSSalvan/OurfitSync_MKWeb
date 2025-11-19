@@ -1,0 +1,134 @@
+/* File: page-style/shuffle.css 
+   beige: #F9F6F2
+   pink-os: #FFD1D2
+*/
+
+
+.shuffle-page {
+  background-color: #f9f6f2;
+  min-height: 100vh;
+
+  /* Push everything BELOW the big OUTFITSYNC header */
+  padding-top: 160px;   /* increased from 80px */
+  padding-left: 200px;
+  padding-right: 40px;
+  padding-bottom: 140px;
+}
+
+/* Container holding all rows */
+.shuffle-content {
+  display: flex;
+  flex-direction: column;
+  gap: 3.5rem; /* bigger spacing between rows – mockup uses wide spacing */
+}
+
+/* One category row */
+.shuffle-row {
+  width: 100%;
+  overflow: hidden;
+}
+
+/* Horizontally scrollable row of items */
+.shuffle-row-inner {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+
+  justify-content: flex-start;  /* ensures items line up horizontally */
+  gap: 4rem;                    /* big spacing – matches mockup */
+  overflow-x: auto;             /* allow horizontal scrolling if many items */
+  padding-bottom: 1.5rem;
+  padding-top: 1rem;
+}
+
+/* The item wrapper: fixed square */
+.shuffle-item {
+  flex: 0 0 auto;
+  width: 140px;          /* square size */
+  height: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Image fills the square */
+.shuffle-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;     /* or 'contain' if you don't want cropping */
+  border-radius: 12px;   /* optional: soft corners */
+}
+
+/* Bottoms slightly bigger */
+.shuffle-row[data-category="bottoms"] img {
+  height: 160px;
+}
+
+/* Shoes smaller */
+.shuffle-row[data-category="shoes"] img {
+  height: 120px;
+}
+
+/* Bags smallest */
+.shuffle-row[data-category="bags"] img {
+  height: 105px;
+}
+
+/* Bottom button container */
+.shuffle-bottom-buttons {
+  position: fixed;
+  bottom: 34px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+  z-index: 3000;
+}
+
+/* CREATE OUTFIT button */
+.shuffle-create-btn {
+  padding: 1.7rem 3.6rem;
+  border: none;
+  border-radius: 20px;
+  background-color: #ffd1d2;
+  font-size: 1.25rem;
+  cursor: pointer;
+  box-shadow: 0 6px 12px rgba(0,0,0,0.35);
+  transition: background-color .2s ease;
+}
+
+.shuffle-create-btn:hover {
+  background-color: #ffd1d2;
+}
+
+/* Bottom action container */
+.shuffle-actions {
+  position: fixed;
+  bottom: 34px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  z-index: 50;
+}
+
+/* Create Outfit button */
+.create-outfit-btn {
+  background-color: #ffd1d2;
+  padding: 1.1rem 2.4rem;
+  border-radius: 999px;
+  font-size: 1rem;
+  font-weight: 500;
+  border: none;
+  cursor: pointer;
+
+  /* Prevent movement */
+  box-shadow: 0 6px 12px rgba(0,0,0,0.12);
+  transition: background-color 0.25s ease;
+}
+
+.create-outfit-btn:hover {
+  background-color: #f3bfc0;
+}

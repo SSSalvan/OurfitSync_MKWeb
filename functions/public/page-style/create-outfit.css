@@ -1,0 +1,189 @@
+/* File: page-style/create-outfit.css */
+/* Hide sidebar / nav overlay on calendar page only */
+#sidebar-container {
+  display: none !important;
+}
+
+.create-outfit-page {
+  min-height: 100vh;
+  background-color: #f9f6f2;
+  padding-left: var(--sidebar-width, 140px);
+  padding-right: 40px;
+  padding-top: 40px;
+  padding-bottom: 140px;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Top bar */
+.co-topbar {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.backBtn img.back-icon {
+  width: 50px;
+  height: 50px;
+  object-fit: contain;
+  cursor: pointer;
+  padding: 0.2rem 0.5rem;
+  color: #000;
+}
+
+.backBtn {
+  background: transparent;
+  border: none;
+  padding: 0; /* remove spacing */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+/* Main stacked rows */
+.co-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2.4rem;
+}
+
+/* Horizontal striped bands */
+.co-row {
+  background-color: rgba(0, 0, 0, 0.03);
+  padding-block: 12px;
+}
+
+.co-strip {
+  display: flex;
+  align-items: center;
+  gap: 3rem;
+
+  overflow-x: auto;        /* scrolls if there are many items, otherwise just stays */
+  scroll-snap-type: none;  /* no center logic anymore */
+  padding-block: 22px;
+}
+
+/* Hide scrollbars but allow scroll if needed */
+.co-strip::-webkit-scrollbar {
+  display: none;
+}
+.co-strip {
+  scrollbar-width: none;
+}
+
+/* Keep your existing .co-item / .co-item.is-active styles.
+   Example (keep or adjust as you already have): */
+
+.co-item {
+  flex: 0 0 auto;
+  opacity: 0.4;
+  transform: scale(0.9);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.co-item.is-active {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+/* Item wrapper */
+.co-item {
+  flex: 0 0 auto;
+  scroll-snap-align: center;
+  opacity: 0.25;
+  transform: scale(0.8);
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.co-item img {
+  display: block;
+  object-fit: contain;
+}
+
+/* Sizes */
+.co-row[data-category="tops"] img {
+  height: 140px;
+}
+
+.co-row[data-category="bottoms"] img {
+  height: 160px;
+}
+
+.co-row[data-category="shoes"] img {
+  height: 125px;
+}
+
+.co-row[data-category="bags"] img {
+  height: 105px;
+}
+
+/* Highlight center item */
+.co-item.is-active {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+/* Bottom action bar */
+.co-actions {
+  position: fixed;
+  bottom: 34px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+}
+
+/* Create outfit button */
+.co-create-btn {
+  padding: 1.7rem 3.6rem;
+  border: none;
+  border-radius: 20px;
+  background-color: #ffd1d2;
+  font-size: 1.25rem;
+  cursor: pointer;
+  box-shadow: 0 6px 12px rgba(0,0,0,0.35);
+  transition: background-color .2s ease;
+}
+
+.co-create-btn:hover {
+  background-color: #f3bfc0;
+}
+
+/* Make the shuffle button transparent with no border */
+.co-shuffle-btn {
+  background: transparent;
+  border: none;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+
+  /* keep existing button visuals */
+  width: 54px;
+  height: 54px;
+  background-color: transparent;
+  transition: background-color .2s ease;
+}
+
+.co-shuffle-btn:hover {
+  background-color: #f3bfc0;
+}
+
+/* NEW: Style the shuffle icon */
+.shuffle-icon {
+  width: 54px;      /* Perfect size inside 54px circle */
+  height: 54px;
+  object-fit: contain;
+  pointer-events: none; /* makes entire button clickable */
+}
+
+
+/* Responsive */
+@media (max-width: 900px) {
+  .create-outfit-page {
+    padding-left: 90px;
+  }
+}

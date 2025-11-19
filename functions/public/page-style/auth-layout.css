@@ -1,0 +1,82 @@
+.auth-page {
+  display: flex;
+  height: 100vh;
+  background-color: #f9f6f2;
+}
+
+/* Sisi kiri (Logo) yang dipakai bersama */
+.left {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  margin-left: 9rem;
+}
+
+.left .logo {
+  width: 480px;
+  height: auto;
+  margin-bottom: 0.5rem;
+}
+
+.left .brand {
+  font-size: 1.1rem;
+  color: #c8a2a2;
+  letter-spacing: 2px;
+}
+
+/* Sisi kanan (Form) yang dipakai bersama */
+.right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 0 3rem;
+  margin-left: 10rem;
+  color: #000;
+}
+
+.right h2 {
+  font-size: 1.8rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+.signup-text {
+  color: #777;
+  font-size: 0.9rem;
+  margin-bottom: 1.5rem;
+}
+
+.signup-text a {
+  color: #ffc0cb;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.signup-text a:hover {
+  text-decoration: underline;
+}
+
+/* Form input dasar */
+.auth-form {
+  width: 80%;
+  max-width: 350px;
+}
+
+.auth-form input {
+  width: 100%;
+  padding: 0.8rem;
+  margin-bottom: 1rem;
+  border: 1.2px solid #999;
+  border-radius: 8px;
+  font-size: 1rem;
+  outline: none;
+}
+
+.auth-form input:focus {
+  border-color: #ffc0cb;
+  box-shadow: 0 0 0 3px rgba(255, 192, 203, 0.2);
+}

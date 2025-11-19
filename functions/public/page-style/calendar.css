@@ -1,0 +1,346 @@
+/* File: page-style/calendar.css
+   Same palette as main.css
+   beige: #F9F6F2
+   pink-os: #FFD1D2
+   pinky: #FFC0CB
+   pink-light: #F3DBDC
+*/
+
+/* Hide sidebar / nav overlay on calendar page only */
+#sidebar-container {
+  display: none !important;
+}
+
+
+/* ---------- CALENDAR PAGE WRAPPER ---------- */
+.calendar-page {
+  min-height: 100vh;
+  padding: 1.8rem 3rem;
+  background-color: #f9f6f2; /* beige */
+  color: #000;               /* override body's pink text for readability */
+}
+
+/* ---------- TOP BAR ---------- */
+.calendar-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+  position: relative;
+}
+
+.backBtn img.back-icon {
+  position: absolute;
+  left: 0;
+  border: none;
+  background: transparent;
+  width: 50px;
+  height: 50px;
+  object-fit: contain;
+  cursor: pointer;
+  padding: 0.2rem 0.5rem;
+  color: #000;
+}
+
+.backBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.calendar-title {
+  font-size: 1.6rem;
+  font-weight: 700;
+}
+
+.topbar-spacer {
+  width: 2rem;
+}
+
+/* ---------- LAYOUT: CALENDAR + EVENTS ---------- */
+.calendar-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 2.1fr) minmax(260px, 1.2fr);
+  gap: 2.4rem;
+  align-items: flex-start;
+}
+
+/* ---------- MONTH VIEW (LEFT) ---------- */
+.month-view {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+}
+
+.month-header {
+  display: flex;
+  justify-content: flex-start;
+}
+
+/* Month selector + dropdown */
+.month-selector {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: 999px;
+  background-color: #ffd1d2; /* pink-os */
+}
+
+.month-label {
+  letter-spacing: 0.02em;
+}
+
+.month-arrow {
+  font-size: 0.8rem;
+}
+
+/* Dropdown */
+.month-dropdown {
+  position: absolute;
+  top: 115%;
+  left: 0;
+  list-style: none;
+  background-color: #f9f6f2;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  padding: 0.4rem 0;
+  margin: 0;
+  width: 180px;
+  max-height: 260px;
+  overflow-y: auto;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-4px);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+  z-index: 20;
+}
+
+.month-selector.open .month-dropdown {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.month-option {
+  padding: 0.35rem 0.9rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.month-option:hover {
+  background-color: #FFC0CB; /* pink-light */
+}
+
+.month-option.selected {
+  font-weight: 600;
+  color: #000;
+}
+
+/* Weekdays row */
+.weekday-row {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  margin-top: 0.3rem;
+  margin-bottom: 0.6rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #555;
+}
+
+.weekday-row span {
+  text-align: center;
+}
+
+/* Calendar grid */
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.35rem;
+}
+
+.day-cell {
+  position: relative;
+  min-height: 56px;
+  padding: 0.3rem 0.15rem;
+  border-radius: 9px;
+  background: transparent;
+  border: none;
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #111;
+  cursor: default;
+  transition: background-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.day-cell:hover:not(.other-month) {
+  background-color: #FFC0CB;
+}
+
+/* Container for day number + 2×2 thumbnail */
+.day-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+
+.other-month {
+  color: #c3c3c3;
+  cursor: default;
+}
+
+/* Day label */
+.day-number {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-align: center;
+  margin-bottom: 4px;  /* small gap above the thumbnail */
+}
+
+/* Small 2×2 outfit thumbnail inside calendar cell */
+.day-outfit-grid {
+  margin-top: 4px;
+  width: 50px;
+  height: 50px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 1px;
+  margin-inline: auto;   /* center inside the cell */
+}
+
+.day-outfit-slot {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 3px;
+  background-color: transparent; /* light pink fallback if slot empty */
+}
+
+.day-outfit-slot img.day-outfit-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Selected / active day */
+.day-highlighted {
+  background-color: #ffd1d2; /* pink-os */
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+}
+
+.calendar-time-icon {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+}
+
+
+/* ---------- EVENTS PANEL (RIGHT) ---------- */
+.events-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.events-header h2 {
+  font-size: 1rem;
+  font-weight: 600;
+  border-bottom: 1px solid #222;
+  padding-bottom: 0.3rem;
+}
+
+.events-date {
+  margin-top: 0.4rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #444;
+}
+
+/* Single event item */
+.event-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.7rem;
+  margin-top: 0.2rem;
+}
+
+.event-icon {
+  font-size: 1.05rem;
+  margin-top: 0.6rem;
+}
+
+.event-card {
+  flex: 1;
+  background-color: #f3dbdc; /* pink-light */
+  border-radius: 11px;
+  padding: 0.75rem 0.95rem;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.event-card:hover {
+  background-color: #ffd1d2; /* pink-os */
+}
+
+.event-label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 0.15rem;
+}
+
+.event-text {
+  font-size: 0.85rem;
+  color: #444;
+}
+
+/* ---------- RESPONSIVE ---------- */
+@media (max-width: 900px) {
+  .calendar-page {
+    padding: 1.4rem 1.6rem 2.2rem;
+  }
+
+  .calendar-layout {
+    grid-template-columns: 1fr;
+    gap: 1.8rem;
+  }
+
+  .events-panel {
+    max-width: 420px;
+  }
+}
+
+@media (max-width: 600px) {
+  .calendar-page {
+    padding-inline: 1.1rem;
+  }
+
+  .calendar-title {
+    font-size: 1.4rem;
+  }
+
+  .month-selector {
+    font-size: 0.95rem;
+  }
+
+  .day-cell {
+    min-height: 50px;
+  }
+
+  .day-outfit-img {
+    width: 24px;
+  }
+}

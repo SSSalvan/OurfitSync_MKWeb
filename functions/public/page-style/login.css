@@ -1,0 +1,41 @@
+/* File: pages/login.css */
+
+/* Style ini KHUSUS untuk halaman login, 
+   layout dasarnya diambil dari auth-layout.css */
+
+.divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 1rem 0;
+}
+
+.divider span {
+  flex: 1;
+  height: 1px;
+  background-color: #ccc;
+}
+
+/* Google button */
+.google-btn {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  background: none;
+  border: none;
+  cursor: pointer;
+  margin-bottom: 1rem;
+}
+
+.google-btn img {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1px solid #ccc;
+  padding: 5px;
+  transition: all 0.2s ease;
+}
+
+.google-btn:hover img {
+  border-color: #ffc0cb;
+}

@@ -1,0 +1,77 @@
+<!-- File: pages/save-calendar.html -->
+<section class="save-calendar-page" id="save-calendar-page">
+  <header class="sc-topbar">
+    <button class="backBtn" aria-label="Back">
+      <img src="images/balik.png" alt="Back" class="back-icon" />
+    </button>
+  </header>
+
+  <main class="sc-main">
+    <!-- LEFT: calendar card -->
+    <section class="sc-calendar-card">
+      <div class="sc-calendar-header">
+        <h2>Select a date</h2>
+      </div>
+
+      <div class="sc-calendar-month-nav">
+        <button class="sc-month-btn" id="sc-prev-month" aria-label="Previous month">❮</button>
+        <div class="sc-month-label" id="sc-month-label">Month YYYY</div>
+        <button class="sc-month-btn" id="sc-next-month" aria-label="Next month">❯</button>
+      </div>
+
+      <div class="sc-calendar-weekdays">
+        <span>Mon</span>
+        <span>Tue</span>
+        <span>Wed</span>
+        <span>Thu</span>
+        <span>Fri</span>
+        <span>Sat</span>
+        <span>Sun</span>
+      </div>
+
+      <div class="sc-calendar-days" id="sc-calendar-days">
+        <!-- days injected via JS -->
+      </div>
+    </section>
+
+    <!-- RIGHT: time & occasion -->
+    <section class="sc-right-panel">
+      <!-- Time -->
+      <div class="sc-time-card">
+        <div class="sc-time-label">Time:</div>
+        <div class="sc-time-options" id="sc-time-options">
+          <button class="sc-time-btn" data-slot="morning" title="Morning">
+            <img src="images/morning.png" alt="Morning" class="sc-time-icon" />
+          </button>
+          <button class="sc-time-btn" data-slot="noon" title="Noon">
+            <img src="images/noon.png" alt="Noon" class="sc-time-icon" />
+          </button>
+          <button class="sc-time-btn" data-slot="afternoon" title="Afternoon">
+            <img src="images/afternoon.png" alt="Afternoon" class="sc-time-icon" />
+          </button>
+          <button class="sc-time-btn" data-slot="night" title="Night">
+            <img src="images/night.png" alt="Night" class="sc-time-icon" />
+          </button>
+        </div>
+      </div>
+
+      <!-- Occasion -->
+      <div class="sc-occasion-card">
+        <div class="sc-occasion-label">Occasion:</div>
+        <input
+          type="text"
+          id="sc-occasion-input"
+          class="sc-occasion-input"
+          placeholder="Dinner with friends, office, party..."
+        />
+      </div>
+
+      <!-- Save button -->
+      <div class="sc-actions">
+        <button class="sc-save-btn" id="sc-save-btn">
+          Save to Calendar
+        </button>
+      </div>
+    </section>
+  </main>
+</section>

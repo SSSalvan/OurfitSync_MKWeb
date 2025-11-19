@@ -1,0 +1,67 @@
+<main class="profile-main">
+  <div class="content-inner" role="region" aria-label="Profile">
+    <div class="avatar-wrap">
+      <img src="images/avatar.png" alt="Avatar" id="profile-user-avatar" />
+      
+      <div class="badge">
+        <img src="images/logo-only.png" alt="badge" />
+      </div>
+    </div>
+
+    <h2 id="profile-user-name">Loading...</h2>
+    
+    <div class="location">
+      <svg
+        width="14"
+        height="14"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="#8a8a8a"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <path d="M21 10c0 6-9 12-9 12S3 16 3 10a9 9 0 1 1 18 0z"></path>
+        <circle cx="12" cy="10" r="3"></circle>
+      </svg>
+      Jakarta
+    </div>
+
+    <a href="#" id="nav-to-edit-profile" class="btn">Edit profile</a>
+  </div>
+
+  <aside class="details-panel" aria-label="Detail Profil">
+    <h3>Profile Details</h3>
+    
+    <div class="detail-item">
+      <div class="label">Gender:</div>
+      <div class="value" id="profile-user-gender">Loading...</div>
+    </div>
+    
+    <div class="detail-item">
+      <div class="label">Birth Date:</div>
+      <div class="value" id="profile-user-birthdate">Loading...</div>
+    </div>
+
+    <div class="detail-item">
+      <div class="label">Email:</div>
+      <div class="value" id="profile-user-email">Loading...</div>
+    </div>
+    
+    <div class="detail-item">
+      <div class="label">Phone Number:</div>
+      <div class="value" id="profile-user-phone">Loading...</div>
+    </div>
+
+    <div class="detail-item">
+      <div class="label">Theme:</div>
+      <div class="value">Pink</div>
+    </div>
+
+    <div class="detail-item" style="border:none; margin-top: 20px;">
+      <button id="logout-button" class="btn" style="background: #ffaaaa; color: #a00;">
+        Logout
+      </button>
+    </div>
+  </aside>
+</main>

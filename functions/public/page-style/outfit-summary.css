@@ -1,0 +1,210 @@
+/* File: page-style/outfit-summary.css */
+/* Hide sidebar / nav overlay on calendar page only */
+#sidebar-container {
+  display: none !important;
+}
+
+.outfit-summary-page {
+  min-height: 100vh;
+  background-color: #f9f6f2;
+  padding-left: var(--sidebar-width, 140px);
+  padding-right: 40px;
+  padding-top: 40px;
+  padding-bottom: 140px;
+  color: #000;
+}
+
+/* top bar */
+.os-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  margin-bottom: 30px;
+}
+
+.backBtn img.back-icon {
+  position: absolute;
+  left: 0;
+  width: 50px;
+  height: 50px;
+  object-fit: contain;
+  cursor: pointer;
+  padding: 0.2rem 0.5rem;
+  color: #000;
+}
+
+.backBtn {
+  background: transparent;
+  border: none;
+  padding: 0; /* remove spacing */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.os-title {
+  font-size: 1.4rem;
+  font-weight: 600;
+  text-align: center;
+  width: 100%;
+  margin-bottom: 0.4rem;
+}
+
+/* main layout */
+.os-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1.1fr);
+  gap: 3rem;
+}
+
+/* headings */
+.os-heading,
+.os-heading-right {
+  font-size: 1.1rem;
+  margin-bottom: 1.2rem;
+}
+
+/* left cards */
+.os-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 1.4rem;
+}
+
+.os-card {
+  display: flex;
+  align-items: center;
+  background-color: #F3DBDC;
+  border-radius: 16px;
+  padding: 0.8rem 1.4rem;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+}
+
+.os-card-img-wrap {
+  flex: 0 0 auto;
+  margin-right: 1.2rem;
+}
+
+.os-card-img-wrap img {
+  height: 60px;
+  width: auto;
+  object-fit: contain;
+}
+
+.os-card-text {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.os-card-main {
+  font-weight: 600;
+  margin-bottom: 0.1rem;
+}
+
+.os-card-sub {
+  font-size: 0.85rem;
+}
+
+/* right collage */
+.os-right {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.os-collage {
+  margin-top: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  align-items: center;
+}
+
+.os-collage-row {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  justify-content: center;
+}
+
+.os-collage img {
+  object-fit: contain;
+}
+
+.os-collage-top img {
+  height: 150px;
+}
+
+.os-collage-bottom img {
+  height: 130px;
+}
+
+.os-collage-accessory img {
+  height: 70px;
+}
+
+/* bottom actions */
+.os-actions {
+  position: fixed;
+  bottom: 32px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+}
+
+.os-save-calendar-btn {
+  padding: 1.7rem 3.6rem;
+  border: none;
+  border-radius: 20px;
+  background-color: #ffd1d2;
+  font-size: 1.25rem;
+  cursor: pointer;
+  box-shadow: 0 6px 12px rgba(0,0,0,0.35);
+  transition: background-color .2s ease;
+}
+
+.os-save-calendar-btn:hover {
+  background-color: #f3bfc0;
+}
+
+.os-download-btn {
+  background: transparent;
+  border: none;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+
+.os-download-btn img {
+  border: none;
+  background-color: transparent;
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  cursor: pointer;
+  color: #000;
+}
+
+/* responsive */
+@media (max-width: 1000px) {
+  .outfit-summary-page {
+    padding-left: 90px;
+  }
+
+  .os-main {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+
+  .os-right {
+    align-items: flex-start;
+  }
+}

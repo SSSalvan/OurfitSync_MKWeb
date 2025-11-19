@@ -1,0 +1,93 @@
+<!-- File: pages/edit-outfit.html -->
+<section id="edit-outfit-page" class="edit-outfit-page">
+  <!-- Top bar -->
+  <header class="eo-topbar">
+    <button class="eo-back-btn" aria-label="Back">
+      <img src="images/balik.png" alt="Back" class="eo-back-icon" />
+    </button>
+    <h1 class="eo-title">OUTFITSYNC</h1>
+  </header>
+
+  <main class="eo-main">
+    <!-- LEFT: 2x2 outfit grid (like calendar thumbnail, but big) -->
+    <section class="eo-left">
+      <div class="eo-outfit-grid">
+        <div class="eo-slot" data-part="Top">
+          <img src="images/placeholder-item.png" alt="Top" />
+          <span class="eo-slot-label">Top</span>
+        </div>
+        <div class="eo-slot" data-part="Bag">
+          <img src="images/placeholder-item.png" alt="Bag" />
+          <span class="eo-slot-label">Bag</span>
+        </div>
+        <div class="eo-slot" data-part="Bottom">
+          <img src="images/placeholder-item.png" alt="Bottom" />
+          <span class="eo-slot-label">Bottom</span>
+        </div>
+        <div class="eo-slot" data-part="Shoes">
+          <img src="images/placeholder-item.png" alt="Shoes" />
+          <span class="eo-slot-label">Shoes</span>
+        </div>
+      </div>
+      <!-- little heart for “liked” – placeholder -->
+      <button class="eo-like-btn" type="button">♡</button>
+    </section>
+
+    <!-- RIGHT: date, week strip, time icons, occasion, buttons -->
+    <section class="eo-right">
+      <!-- Date + top-right icons row -->
+      <div class="eo-date-row">
+        <div class="eo-date-text-wrap">
+          <div id="eo-weekday-label" class="eo-weekday-label">Saturday</div>
+          <div id="eo-date-label" class="eo-date-label">14 February 2025</div>
+        </div>
+
+        <div class="eo-date-icons">
+          <!-- placeholder icons -->
+          <button class="eo-icon-btn" type="button">🔕</button>
+          <button class="eo-icon-btn" type="button">📅</button>
+          <button class="eo-icon-btn" type="button">💖</button>
+        </div>
+      </div>
+
+      <!-- Small Mon–Sun week strip -->
+      <div id="eo-week-strip" class="eo-week-strip"></div>
+
+      <!-- Time icons (same sprites as save-calendar) -->
+      <section class="eo-time-section">
+        <h3 class="eo-section-title">Time:</h3>
+        <div class="eo-time-buttons">
+          <button class="eo-time-btn" data-time="Morning" type="button">
+            <img src="images/morning.png" alt="Morning" />
+          </button>
+          <button class="eo-time-btn" data-time="Noon" type="button">
+            <img src="images/noon.png" alt="Noon" />
+          </button>
+          <button class="eo-time-btn" data-time="Afternoon" type="button">
+            <img src="images/afternoon.png" alt="Afternoon" />
+          </button>
+          <button class="eo-time-btn" data-time="Night" type="button">
+            <img src="images/night.png" alt="Night" />
+          </button>
+        </div>
+      </section>
+
+      <!-- Occasion text -->
+      <section class="eo-occasion-section">
+        <p id="eo-occasion-text" class="eo-occasion-text">
+          <!-- “Valentine’s Day Dinner” will be injected here -->
+        </p>
+      </section>
+
+      <!-- Bottom buttons -->
+      <div class="eo-actions">
+        <button id="eo-edit-btn" class="eo-edit-btn" type="button">
+          Edit
+        </button>
+        <button id="eo-delete-btn" class="eo-delete-btn" type="button">
+          Delete
+        </button>
+      </div>
+    </section>
+  </main>
+</section>

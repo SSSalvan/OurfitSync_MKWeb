@@ -1,0 +1,36 @@
+/* File: pages/verify.css */
+
+.verify-page .right {
+  /* Style khusus jika ada */
+}
+.verify-page h2 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 0.8rem;
+}
+.verify-text {
+  color: #777;
+  font-size: 0.95rem;
+  line-height: 1.4rem;
+  max-width: 350px;
+  margin-bottom: 2rem;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+.email-text {
+  color: #a67a7a;
+  font-weight: 500;
+}
+.resend-text {
+  font-size: 0.9rem;
+  color: #777;
+  margin-top: 1.5rem;
+  text-align: center;
+  width: 100%;
+  max-width: 340px;
+}
+.resend-text a {
+  color: #000;
+  font-weight: 600;
+  text-decoration: underline;
+}

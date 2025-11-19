@@ -1,0 +1,15 @@
+.landing {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: #f9f6f2;
+  transition: opacity 1s ease;
+}
+
+.brand-name {
+  font-size: 1.4rem;
+  color: #c8a2a2;
+  letter-spacing: 2px;
+}

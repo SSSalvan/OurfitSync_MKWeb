@@ -1,0 +1,9 @@
+.signup-page .right {
+  /* Tweak posisi khusus untuk halaman signup */
+  transform: translateY(-40px);
+}
+
+/* Style form signup (jika ada yg beda dari auth-form) */
+.signup-form {
+  /* ... tambahkan style jika ada yg beda ... */
+}

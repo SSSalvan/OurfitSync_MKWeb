@@ -1,0 +1,25 @@
+
+.verified-page .right {
+  align-items: center; /* Pusatkan konten */
+  text-align: center;
+  margin-left: 0;
+  padding: 0 3rem;
+}
+.verified-page .left {
+  /* Sembunyikan 'left' agar 'right' bisa di tengah */
+  flex: 0.5; /* Kurangi ukuran */
+  opacity: 0.5;
+}
+.success-text {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #222;
+  margin-bottom: 0.2rem;
+}
+.checkmark {
+  margin-bottom: 2.5rem;
+}
+.check-icon {
+  width: 150px; /* Sesuaikan ukuran */
+  height: auto;
+}
