@@ -1,9 +1,11 @@
 // ------------------------------------------------------------
-// FINAL EDIT OUTFIT — WORKS WITH EXPRESS + FIRESTORE
+// FINAL EDIT OUTFIT — USING LOCAL EXPRESS BACKEND
 // ------------------------------------------------------------
 import { auth } from "../firebase-init.js";
 
 let cleanupFns = [];
+
+const API_BASE = "http://localhost:5050/api";
 
 // ------------------------------------------------------------
 // HELPERS
@@ -18,7 +20,7 @@ function normalizeOutfit(raw = {}) {
 }
 
 function stripUndefined(obj) {
-  return JSON.parse(JSON.stringify(obj)); // removes undefined safely
+  return JSON.parse(JSON.stringify(obj));
 }
 
 function toDate(ds) {
@@ -47,30 +49,17 @@ export function initEditOutfitPage(params = {}) {
   const root = document.getElementById("edit-outfit-page");
   if (!root) return;
 
-  // SAFEST POSSIBLE EVENT EXTRACTION
   let event = null;
 
-  // Case 1: calendar passed { event: {...} }
-  if (params && typeof params === "object" && params.event) {
-    event = params.event;
-  }
-
-  // Case 2: calendar passed the event DIRECTLY
-  else if (params && typeof params === "object" && params.id) {
-    event = params;
-  }
-
-  // Case 3: impossible case → event missing
-  else {
-    event = {};
-  }
+  if (params?.event) event = params.event;
+  else if (params?.id) event = params;
+  else event = {};
 
   console.log("DEBUG resolved event =", event);
 
   const eventID = event.id || event.docId || null;
 
   console.log("DEBUG resolved eventID =", eventID);
-
 
   if (!eventID) console.warn("⚠ Event ID missing", params);
 
@@ -79,7 +68,6 @@ export function initEditOutfitPage(params = {}) {
   let outfit = normalizeOutfit(event.outfit || {});
   let occasion = event.occasion || "";
 
-  // Elements
   const weekGrid = root.querySelector("#eo-week-grid");
   const dayLabel = root.querySelector("#eo-week-day");
   const dateLabel = root.querySelector("#eo-week-date");
@@ -193,19 +181,13 @@ export function initEditOutfitPage(params = {}) {
   }
 
   // ------------------------------------------------------------
-  // SAVE EVENT — PUT /api/calendar/:id
+  // SAVE EVENT (LOCAL EXPRESS PUT)
   // ------------------------------------------------------------
   async function saveEvent() {
-    if (!eventID) {
-      alert("Cannot save: event ID missing.");
-      return;
-    }
+    if (!eventID) return alert("Cannot save: event ID missing.");
 
     const user = auth.currentUser;
-    if (!user) {
-      alert("You must be logged in.");
-      return;
-    }
+    if (!user) return alert("You must be logged in.");
 
     const cleaned = stripUndefined(outfit);
 
@@ -217,7 +199,7 @@ export function initEditOutfitPage(params = {}) {
       outfit: cleaned
     };
 
-    const res = await fetch(`/api/calendar/${eventID}`, {
+    const res = await fetch(`${API_BASE}/calendar/${eventID}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body)
@@ -233,17 +215,13 @@ export function initEditOutfitPage(params = {}) {
   }
 
   // ------------------------------------------------------------
-  // DELETE EVENT
+  // DELETE EVENT (LOCAL EXPRESS DELETE)
   // ------------------------------------------------------------
   async function deleteEventFn() {
-    if (!eventID) {
-      alert("Cannot delete: event ID missing.");
-      return;
-    }
-
+    if (!eventID) return alert("Cannot delete: event ID missing.");
     if (!confirm("Delete this event?")) return;
 
-    const res = await fetch(`/api/calendar/${eventID}`, {
+    const res = await fetch(`${API_BASE}/calendar/${eventID}`, {
       method: "DELETE"
     });
 
