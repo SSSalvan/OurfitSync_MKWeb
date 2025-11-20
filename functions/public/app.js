@@ -67,7 +67,7 @@ function loadPageStyle(pageName) {
     currentPageStyle = link;
 }
 
-window.loadPage = async (pageName) => {
+window.loadPage = async (pageName, params = {}) => {
     currentCleanupFunction();
     removePageScript();
 
@@ -91,12 +91,12 @@ window.loadPage = async (pageName) => {
         }
     }
 
-    initializePageEvents(pageName);
+    initializePageEvents(pageName, params);
 }
 
 const toPascalCase = (s) => s.split('-').map(str => str.charAt(0).toUpperCase() + str.slice(1)).join('');
 
-async function initializePageEvents(pageName) {
+async function initializePageEvents(pageName, params = {}) {
     currentCleanupFunction = () => {};
 
     try {
@@ -121,7 +121,7 @@ async function initializePageEvents(pageName) {
             const cleanupFunc = `cleanup${capitalizedName}Page`;
 
             if (module[initFunc]) {
-                module[initFunc]();
+                module[initFunc](params);
             }
 
             currentCleanupFunction = module[cleanupFunc] || (() => {});

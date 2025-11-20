@@ -1,192 +1,284 @@
-// File: page-logic/logic-edit-outfit.js
-import { db } from "../firebase-init.js";
-import {
-  doc,
-  getDoc,
-  deleteDoc,
-  updateDoc,
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+// ------------------------------------------------------------
+// FINAL EDIT OUTFIT — WORKS WITH EXPRESS + FIRESTORE
+// ------------------------------------------------------------
+import { auth } from "../firebase-init.js";
 
-const MONTH_NAMES = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-];
+let cleanupFns = [];
 
-const WEEKDAY_LONG = [
-  "Sunday",
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-];
+// ------------------------------------------------------------
+// HELPERS
+// ------------------------------------------------------------
+function normalizeOutfit(raw = {}) {
+  return {
+    Top: raw.Top || raw.top || null,
+    Bottom: raw.Bottom || raw.bottom || null,
+    Bag: raw.Bag || raw.bag || null,
+    Shoes: raw.Shoes || raw.shoes || null,
+  };
+}
 
-const WEEKDAY_SHORT = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+function stripUndefined(obj) {
+  return JSON.parse(JSON.stringify(obj)); // removes undefined safely
+}
 
-let currentEvent = null;
-let listeners = [];
+function toDate(ds) {
+  return new Date(ds + "T00:00:00");
+}
 
-export async function initEditOutfitPage() {
+function formatHeaderDate(ds) {
+  const d = toDate(ds);
+  const months = [
+    "January","February","March","April","May","June",
+    "July","August","September","October","November","December"
+  ];
+  const days = [
+    "Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"
+  ];
+  return {
+    dayName: days[d.getDay()],
+    dateText: `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`,
+  };
+}
+
+// ------------------------------------------------------------
+// MAIN
+// ------------------------------------------------------------
+export function initEditOutfitPage(params = {}) {
   const root = document.getElementById("edit-outfit-page");
   if (!root) return;
 
-  // Back
+  // SAFEST POSSIBLE EVENT EXTRACTION
+  let event = null;
+
+  // Case 1: calendar passed { event: {...} }
+  if (params && typeof params === "object" && params.event) {
+    event = params.event;
+  }
+
+  // Case 2: calendar passed the event DIRECTLY
+  else if (params && typeof params === "object" && params.id) {
+    event = params;
+  }
+
+  // Case 3: impossible case → event missing
+  else {
+    event = {};
+  }
+
+  console.log("DEBUG resolved event =", event);
+
+  const eventID = event.id || event.docId || null;
+
+  console.log("DEBUG resolved eventID =", eventID);
+
+
+  if (!eventID) console.warn("⚠ Event ID missing", params);
+
+  let selectedDate = event.date || new Date().toISOString().slice(0, 10);
+  let selectedTime = (event.time || "morning").toLowerCase();
+  let outfit = normalizeOutfit(event.outfit || {});
+  let occasion = event.occasion || "";
+
+  // Elements
+  const weekGrid = root.querySelector("#eo-week-grid");
+  const dayLabel = root.querySelector("#eo-week-day");
+  const dateLabel = root.querySelector("#eo-week-date");
+  const timeBtns = root.querySelectorAll(".eo-time-btn");
+  const occasionInput = root.querySelector("#eo-occasion-input");
+  const gridSlots = root.querySelectorAll(".eo-grid-slot");
+  const saveBtn = root.querySelector(".eo-save-btn");
+  const deleteBtn = root.querySelector(".eo-delete-btn");
   const backBtn = root.querySelector(".eo-back-btn");
-  if (backBtn) {
-    const handler = () => window.loadPage && window.loadPage("calendar");
-    backBtn.addEventListener("click", handler);
-    listeners.push(() => backBtn.removeEventListener("click", handler));
+
+  // ------------------------------------------------------------
+  // HEADER DATE
+  // ------------------------------------------------------------
+  function updateHeader() {
+    const { dayName, dateText } = formatHeaderDate(selectedDate);
+    dayLabel.textContent = dayName;
+    dateLabel.textContent = dateText;
   }
 
-  const eventId = localStorage.getItem("editOutfitEventId");
-  if (!eventId) {
-    console.warn("No editOutfitEventId set.");
-    return;
+  // ------------------------------------------------------------
+  // WEEK GRID
+  // ------------------------------------------------------------
+  function buildWeek() {
+    weekGrid.innerHTML = "";
+
+    const base = toDate(selectedDate);
+    const offset = (base.getDay() + 6) % 7;
+    const monday = new Date(base);
+    monday.setDate(base.getDate() - offset);
+
+    const short = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
+
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(monday);
+      d.setDate(monday.getDate() + i);
+
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, "0");
+      const dd = String(d.getDate()).padStart(2, "0");
+
+      const ds = `${yyyy}-${mm}-${dd}`;
+
+      const cell = document.createElement("button");
+      cell.className = "eo-week-cell";
+      cell.dataset.date = ds;
+      cell.innerHTML = `
+        <div class="eo-week-cell-label">${short[i]}</div>
+        <div class="eo-week-cell-num">${d.getDate()}</div>
+      `;
+
+      if (ds === selectedDate) cell.classList.add("selected");
+
+      const handler = () => {
+        selectedDate = ds;
+        updateHeader();
+
+        [...weekGrid.children].forEach(c => c.classList.remove("selected"));
+        cell.classList.add("selected");
+      };
+
+      cell.addEventListener("click", handler);
+      cleanupFns.push(() => cell.removeEventListener("click", handler));
+
+      weekGrid.appendChild(cell);
+    }
   }
 
-  try {
-    const snap = await getDoc(doc(db, "calendarEvents", eventId));
-    if (!snap.exists()) {
-      console.warn("calendarEvents doc not found:", eventId);
+  // ------------------------------------------------------------
+  // OUTFIT GRID
+  // ------------------------------------------------------------
+  function buildOutfitGrid() {
+    gridSlots.forEach(slot => {
+      const part = slot.dataset.part;
+      const img = slot.querySelector("img");
+      img.src = outfit[part]?.imageUrl || "images/placeholder-item.png";
+
+      const handler = () => {
+        window.loadPage("wardrobe", {
+          mode: "select",
+          part,
+          onSelect: item => {
+            outfit[part] = item;
+            img.src = item.imageUrl;
+          }
+        });
+      };
+
+      slot.addEventListener("click", handler);
+      cleanupFns.push(() => slot.removeEventListener("click", handler));
+    });
+  }
+
+  // ------------------------------------------------------------
+  // TIME BUTTONS
+  // ------------------------------------------------------------
+  function buildTimeButtons() {
+    timeBtns.forEach(btn => {
+      const t = btn.dataset.time.toLowerCase();
+
+      if (t === selectedTime) btn.classList.add("is-active");
+
+      const handler = () => {
+        selectedTime = t;
+        timeBtns.forEach(b => b.classList.remove("is-active"));
+        btn.classList.add("is-active");
+      };
+
+      btn.addEventListener("click", handler);
+      cleanupFns.push(() => btn.removeEventListener("click", handler));
+    });
+  }
+
+  // ------------------------------------------------------------
+  // SAVE EVENT — PUT /api/calendar/:id
+  // ------------------------------------------------------------
+  async function saveEvent() {
+    if (!eventID) {
+      alert("Cannot save: event ID missing.");
       return;
     }
-    currentEvent = { id: snap.id, ...snap.data() };
-    renderFromEvent(root, currentEvent);
-  } catch (err) {
-    console.error("Failed to load calendar event:", err);
+
+    const user = auth.currentUser;
+    if (!user) {
+      alert("You must be logged in.");
+      return;
+    }
+
+    const cleaned = stripUndefined(outfit);
+
+    const body = {
+      userId: user.uid,
+      date: selectedDate,
+      time: selectedTime,
+      occasion: occasionInput.value.trim(),
+      outfit: cleaned
+    };
+
+    const res = await fetch(`/api/calendar/${eventID}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
+
+    if (!res.ok) {
+      console.error("SAVE ERROR:", await res.text());
+      alert("Failed to save event.");
+      return;
+    }
+
+    window.loadPage("calendar");
   }
 
-  // Delete (optional)
-  const deleteBtn = root.querySelector("#eo-delete-btn");
-  if (deleteBtn && currentEvent) {
-    const handler = async () => {
-      if (!confirm("Delete this outfit from calendar?")) return;
-      await deleteDoc(doc(db, "calendarEvents", currentEvent.id));
-      window.loadPage && window.loadPage("calendar");
-    };
-    deleteBtn.addEventListener("click", handler);
-    listeners.push(() => deleteBtn.removeEventListener("click", handler));
+  // ------------------------------------------------------------
+  // DELETE EVENT
+  // ------------------------------------------------------------
+  async function deleteEventFn() {
+    if (!eventID) {
+      alert("Cannot delete: event ID missing.");
+      return;
+    }
+
+    if (!confirm("Delete this event?")) return;
+
+    const res = await fetch(`/api/calendar/${eventID}`, {
+      method: "DELETE"
+    });
+
+    if (!res.ok) {
+      console.error("DELETE ERROR:", await res.text());
+      alert("Failed to delete event.");
+      return;
+    }
+
+    window.loadPage("calendar");
   }
 
-  // Edit button stub (you can expand later)
-  const editBtn = root.querySelector("#eo-edit-btn");
-  if (editBtn) {
-    const handler = async () => {
-      alert("Edit logic not implemented yet – you can hook updateDoc here.");
-    };
-    editBtn.addEventListener("click", handler);
-    listeners.push(() => editBtn.removeEventListener("click", handler));
+  // ------------------------------------------------------------
+  // BACK BUTTON
+  // ------------------------------------------------------------
+  if (backBtn) {
+    const handler = () => window.loadPage("calendar");
+    backBtn.addEventListener("click", handler);
+    cleanupFns.push(() => backBtn.removeEventListener("click", handler));
   }
+
+  // ------------------------------------------------------------
+  // INIT UI
+  // ------------------------------------------------------------
+  occasionInput.value = occasion;
+  updateHeader();
+  buildWeek();
+  buildTimeButtons();
+  buildOutfitGrid();
+
+  if (saveBtn) saveBtn.addEventListener("click", saveEvent);
+  if (deleteBtn) deleteBtn.addEventListener("click", deleteEventFn);
 }
 
 export function cleanupEditOutfitPage() {
-  listeners.forEach((fn) => fn());
-  listeners = [];
-}
-
-function renderFromEvent(root, evt) {
-  // ----- Outfit grid -----
-  const outfit = evt.outfit || {};
-  ["Top", "Bag", "Bottom", "Shoes"].forEach((part) => {
-    const slotImg = root.querySelector(`.eo-slot[data-part="${part}"] img`);
-    if (!slotImg) return;
-    const data = outfit[part];
-    if (data && data.imageUrl) {
-      slotImg.src = data.imageUrl;
-      slotImg.alt = `${part} outfit item`;
-    } else {
-      slotImg.src = "images/placeholder-item.png";
-      slotImg.alt = "Placeholder";
-    }
-  });
-
-  // liked
-  const likeBtn = root.querySelector(".eo-like-btn");
-  if (likeBtn) {
-    likeBtn.textContent = evt.isLiked ? "♥" : "♡";
-  }
-
-  // ----- Date + weekday text -----
-  const dateStr = evt.date; // "YYYY-MM-DD"
-  const [yyyy, mm, dd] = dateStr.split("-").map(Number);
-  const dateObj = new Date(yyyy, mm - 1, dd);
-
-  const weekdayLabel = root.querySelector("#eo-weekday-label");
-  const dateLabel = root.querySelector("#eo-date-label");
-  if (weekdayLabel) weekdayLabel.textContent = WEEKDAY_LONG[dateObj.getDay()];
-  if (dateLabel)
-    dateLabel.textContent = `${dd} ${
-      MONTH_NAMES[dateObj.getMonth()]
-    } ${dateObj.getFullYear()}`;
-
-  // ----- Week strip -----
-  buildWeekStrip(root, dateObj);
-
-  // ----- Time icons -----
-  const time = evt.time || "Night";
-  root.querySelectorAll(".eo-time-btn").forEach((btn) => {
-    btn.classList.toggle("is-selected", btn.dataset.time === time);
-  });
-
-  // ----- Occasion text -----
-  const occEl = root.querySelector("#eo-occasion-text");
-  if (occEl) occEl.textContent = evt.occasion || "";
-}
-
-function buildWeekStrip(root, selectedDate) {
-  const strip = root.querySelector("#eo-week-strip");
-  if (!strip) return;
-  strip.innerHTML = "";
-
-  // find Monday of the week that contains selectedDate
-  const jsDay = selectedDate.getDay(); // 0=Sun
-  const mondayOffset = (jsDay + 6) % 7;
-  const monday = new Date(selectedDate);
-  monday.setDate(selectedDate.getDate() - mondayOffset);
-
-  for (let i = 0; i < 7; i++) {
-    const d = new Date(monday);
-    d.setDate(monday.getDate() + i);
-
-    const cell = document.createElement("div");
-    cell.className = "eo-week-cell";
-
-    const labelRow = document.createElement("div");
-    labelRow.className = "eo-week-label-row";
-
-    const nameSpan = document.createElement("span");
-    nameSpan.className = "eo-week-name";
-    nameSpan.textContent = WEEKDAY_SHORT[i];
-
-    const flame = document.createElement("span");
-    flame.className = "eo-week-flame";
-    flame.textContent = "•"; // placeholder flame icon
-
-    labelRow.appendChild(nameSpan);
-    labelRow.appendChild(flame);
-
-    const num = document.createElement("div");
-    num.className = "eo-week-number";
-    num.textContent = d.getDate();
-
-    // highlight currently selected date
-    if (d.toDateString() === selectedDate.toDateString()) {
-      cell.classList.add("is-selected");
-    }
-
-    cell.appendChild(labelRow);
-    cell.appendChild(num);
-    strip.appendChild(cell);
-  }
+  cleanupFns.forEach(fn => fn());
+  cleanupFns = [];
 }
