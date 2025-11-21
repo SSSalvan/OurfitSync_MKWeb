@@ -7,16 +7,19 @@ import cors from "cors";
 import dotenv from "dotenv";
 import admin from "firebase-admin";
 import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 
-// Load environment variables (optional, but safe)
+// ---------------------------------------------------------------
+// Environment + Service Account
+// ---------------------------------------------------------------
 dotenv.config();
 
-// ---------------------------------------------------------------
-// Firebase Admin initialization (Node 22, no JSON assert)
-// ---------------------------------------------------------------
-const serviceAccount = JSON.parse(
-  fs.readFileSync(new URL("./serviceAccountKey.json", import.meta.url))
-);
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const serviceAccountPath = path.join(__dirname, "serviceAccountKey.json");
+const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, "utf8"));
 
 if (!admin.apps.length) {
   admin.initializeApp({
@@ -27,36 +30,17 @@ if (!admin.apps.length) {
 const db = admin.firestore();
 
 // ---------------------------------------------------------------
-// Express app setup
+// Express Setup
 // ---------------------------------------------------------------
 const app = express();
 const PORT = process.env.PORT || 5050;
 
-// Basic CORS + JSON body
-app.use(
-  cors({
-    origin: "*",
-    methods: "GET,POST,PUT,DELETE,OPTIONS",
-    allowedHeaders: "Content-Type,Authorization",
-  })
-);
+app.use(cors({ origin: "*" }));
 app.use(express.json({ limit: "10mb" }));
 
-// Handle preflight
-app.options("*", (req, res) => {
-  res.setHeader("Access-Control-Allow-Origin", "*");
-  res.setHeader(
-    "Access-Control-Allow-Methods",
-    "GET,POST,PUT,DELETE,OPTIONS"
-  );
-  res.setHeader(
-    "Access-Control-Allow-Headers",
-    "Content-Type,Authorization"
-  );
-  res.sendStatus(200);
-});
-
-// Simple health check
+// ---------------------------------------------------------------
+// Root Health Check
+// ---------------------------------------------------------------
 app.get("/", (req, res) => {
   res.send("OutfitSync backend is running.");
 });
@@ -65,61 +49,51 @@ app.get("/", (req, res) => {
 // CALENDAR ROUTES
 // ---------------------------------------------------------------
 
-// Create calendar event
-// POST /api/calendar
+// Create event
 app.post("/api/calendar", async (req, res) => {
   try {
     const docRef = await db.collection("calendarEvents").add(req.body);
-    res.status(201).json({
-      id: docRef.id,
-      message: "Calendar event created",
-    });
+    res.status(201).json({ id: docRef.id });
   } catch (error) {
     console.error("POST /api/calendar error:", error);
     res.status(500).json({ error: error.message });
   }
 });
 
-// Get all events for a user
-// GET /api/calendar/user/:uid
+// Get all events for user
 app.get("/api/calendar/user/:uid", async (req, res) => {
   try {
     const uid = req.params.uid;
+
     const snap = await db
       .collection("calendarEvents")
       .where("userId", "==", uid)
       .get();
 
-    const events = snap.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
-
+    const events = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
     res.json(events);
   } catch (error) {
-    console.error("GET /api/calendar/user/:uid error:", error);
+    console.error("GET /api/calendar/user error:", error);
     res.status(500).json({ error: error.message });
   }
 });
 
-// Update calendar event
-// PUT /api/calendar/:id
+// Update event
 app.put("/api/calendar/:id", async (req, res) => {
   try {
     await db.collection("calendarEvents").doc(req.params.id).update(req.body);
-    res.json({ id: req.params.id, message: "Calendar event updated" });
+    res.json({ id: req.params.id });
   } catch (error) {
     console.error("PUT /api/calendar/:id error:", error);
     res.status(500).json({ error: error.message });
   }
 });
 
-// Delete calendar event
-// DELETE /api/calendar/:id
+// Delete event
 app.delete("/api/calendar/:id", async (req, res) => {
   try {
     await db.collection("calendarEvents").doc(req.params.id).delete();
-    res.json({ id: req.params.id, message: "Calendar event deleted" });
+    res.json({ id: req.params.id });
   } catch (error) {
     console.error("DELETE /api/calendar/:id error:", error);
     res.status(500).json({ error: error.message });
@@ -127,26 +101,35 @@ app.delete("/api/calendar/:id", async (req, res) => {
 });
 
 // ---------------------------------------------------------------
-// WARDROBE ROUTES
+// WARDROBE ROUTES  — FIXED BASED ON YOUR FIRESTORE STRUCTURE
+// ---------------------------------------------------------------
+//
+// Your Firestore structure:
+// wardrobeItems
+//   └── <uid>
+//         ├── <autoItemId1>
+//         ├── <autoItemId2>
+//         ├── ...
+//
+// Each <autoItemId> is an item document.
 // ---------------------------------------------------------------
 
-// Create wardrobe item
-// POST /api/wardrobe
+// Create wardrobe item (matching Home's structure)
 app.post("/api/wardrobe", async (req, res) => {
   try {
-    const docRef = await db.collection("wardrobe").add(req.body);
-    res.status(201).json({
-      id: docRef.id,
-      message: "Wardrobe item created",
+    const docRef = await db.collection("wardrobeItems").add({
+      ...req.body,
+      timestamp: new Date().toISOString(),
     });
+
+    res.status(201).json({ id: docRef.id });
   } catch (error) {
     console.error("POST /api/wardrobe error:", error);
     res.status(500).json({ error: error.message });
   }
 });
 
-// Get wardrobe items for a user
-// GET /api/wardrobe?userId=UID
+// Load wardrobe items for user (correct structure)
 app.get("/api/wardrobe", async (req, res) => {
   try {
     const { userId } = req.query;
@@ -155,7 +138,7 @@ app.get("/api/wardrobe", async (req, res) => {
     }
 
     const snap = await db
-      .collection("wardrobe")
+      .collection("wardrobeItems")
       .where("userId", "==", userId)
       .get();
 
@@ -164,42 +147,36 @@ app.get("/api/wardrobe", async (req, res) => {
       ...doc.data(),
     }));
 
-    res.json(items);
+    res.json({ items });
   } catch (error) {
     console.error("GET /api/wardrobe error:", error);
     res.status(500).json({ error: error.message });
   }
 });
 
-// ---------------------------------------------------------------
-// USER PROFILE ROUTES (optional but used by api.js)
-// ---------------------------------------------------------------
 
-// Get user profile
-// GET /api/users/:uid
+// ---------------------------------------------------------------
+// USER PROFILE (unchanged)
+// ---------------------------------------------------------------
 app.get("/api/users/:uid", async (req, res) => {
   try {
-    const uid = req.params.uid;
-    const doc = await db.collection("users").doc(uid).get();
-    if (!doc.exists) {
-      return res.status(404).json({ error: "User not found" });
-    }
+    const doc = await db.collection("users").doc(req.params.uid).get();
+    if (!doc.exists) return res.status(404).json({ error: "Not found" });
     res.json({ id: doc.id, ...doc.data() });
   } catch (error) {
-    console.error("GET /api/users/:uid error:", error);
+    console.error("GET /api/users error:", error);
     res.status(500).json({ error: error.message });
   }
 });
 
-// Create/update user profile
-// POST /api/users/:uid
 app.post("/api/users/:uid", async (req, res) => {
   try {
-    const uid = req.params.uid;
-    await db.collection("users").doc(uid).set(req.body, { merge: true });
-    res.json({ id: uid, message: "User profile saved" });
+    await db.collection("users").doc(req.params.uid).set(req.body, {
+      merge: true,
+    });
+    res.json({ id: req.params.uid });
   } catch (error) {
-    console.error("POST /api/users/:uid error:", error);
+    console.error("POST /api/users error:", error);
     res.status(500).json({ error: error.message });
   }
 });

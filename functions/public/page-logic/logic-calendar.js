@@ -9,10 +9,10 @@ let cleanupFns = [];
 const API_BASE = "http://localhost:5050/api";
 
 const timeIcons = {
-  Morning: "images/morning.png",
-  Noon: "images/noon.png",
-  Afternoon: "images/afternoon.png",
-  Night: "images/night.png",
+  morning: "images/morning.png",
+  noon: "images/noon.png",
+  afternoon: "images/afternoon.png",
+  night: "images/night.png",
   default: "images/morning.png",
 };
 

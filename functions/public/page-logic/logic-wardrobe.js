@@ -1,46 +1,117 @@
-import { auth } from '../firebase-init.js';
-import { fetchWardrobe } from '../utils/api.js'; // Gunakan API baru
-import { renderItemsToContainer } from '../utils/renderer.js';
+// logic-wardrobe.js — Fully patched + sized correctly + correct structure
+import { auth } from "../firebase-init.js";
 
-let allWardrobeItems = []; 
-let currentWardrobeFilter = 'all';
+let allWardrobeItems = [];
+let cleanupFns = [];
 
-function applyWardrobeFilter(category) {
-  currentWardrobeFilter = category;
-  document.querySelectorAll('#wardrobe-filter-chips .chip').forEach(chip => {
-    chip.classList.toggle('active', chip.dataset.category === category);
+const API_BASE = "http://localhost:5050";
+
+// ======================================================
+// FETCH WARDROBE FROM EXPRESS
+// ======================================================
+async function fetchWardrobeExpress(userId) {
+  const res = await fetch(`${API_BASE}/api/wardrobe?userId=${userId}`);
+
+  if (!res.ok) throw new Error("Failed to fetch wardrobe");
+  const data = await res.json();
+
+  return data.items || [];
+}
+
+// ======================================================
+// RENDER WARDROBE GRID
+// ======================================================
+function renderItems(items) {
+  const grid = document.getElementById("wardrobe-grid-container");
+  const emptyMsg = document.getElementById("wardrobe-empty-message");
+
+  if (!grid) return;
+  grid.innerHTML = "";
+
+  if (!items.length) {
+    emptyMsg.style.display = "block";
+    return;
+  }
+
+  emptyMsg.style.display = "none";
+
+  items.forEach((item) => {
+    const card = document.createElement("div");
+    card.className = "item-card";
+
+    card.innerHTML = `
+      <img src="${item.imageUrl || item.url}" class="wardrobe-thumb" />
+
+      <button class="like-btn ${item.isLiked ? "liked" : ""}">
+        <svg viewBox="0 0 24 24">
+          <path d="M12 21s-6.7-4.5-9.5-8.3C.8 10.3 1 7.3 3 5.5c2-1.8 5-1.2 6.6.7L12 8.8l2.4-2.6c1.6-1.9 4.6-2.5 6.6-.7 2 1.8 2.2 4.8.5 7.2C18.7 16.5 12 21 12 21z"/>
+        </svg>
+      </button>
+    `;
+
+    grid.appendChild(card);
   });
-  
-  const filteredList = (category === 'all' || !category)
-    ? allWardrobeItems
-    : allWardrobeItems.filter(item => 
-        (item.category && item.category.toLowerCase() === category.toLowerCase())
-      );
-      
-  renderItemsToContainer(filteredList, 'wardrobe-grid-container', 'wardrobe-empty-message');
 }
 
-async function loadWardrobeData(userId) {
-    allWardrobeItems = await fetchWardrobe(userId); // Panggil API Express
-    applyWardrobeFilter('all');
+// ======================================================
+// FILTERING LOGIC
+// ======================================================
+function applyFilter(category) {
+  document.querySelectorAll("#wardrobe-filter-chips .chip").forEach((chip) => {
+    chip.classList.toggle("active", chip.dataset.category === category);
+  });
+
+  const filtered =
+    category === "all"
+      ? allWardrobeItems
+      : allWardrobeItems.filter(
+          (item) => item.category?.toLowerCase() === category.toLowerCase()
+        );
+
+  renderItems(filtered);
 }
 
-export function initWardrobePage() {
-  const currentUser = auth.currentUser;
-  if (currentUser) {
-    loadWardrobeData(currentUser.uid);
-    
-    const chipGroup = document.getElementById('wardrobe-filter-chips');
-    if(chipGroup) {
-        chipGroup.addEventListener('click', (e) => {
-        if (e.target.classList.contains('chip')) {
-            applyWardrobeFilter(e.target.dataset.category);
-        }
-        });
-    }
+// ======================================================
+// LOAD WARDROBE ITEMS
+// ======================================================
+async function loadWardrobe(userId) {
+  try {
+    allWardrobeItems = await fetchWardrobeExpress(userId);
+    applyFilter("all");
+  } catch (err) {
+    console.error("Wardrobe load error:", err);
+    allWardrobeItems = [];
+    applyFilter("all");
   }
 }
 
+// ======================================================
+// PAGE INIT
+// ======================================================
+export function initWardrobePage() {
+  const user = auth.currentUser;
+  if (!user) return;
+
+  loadWardrobe(user.uid);
+
+  const chipGroup = document.getElementById("wardrobe-filter-chips");
+  if (chipGroup) {
+    const chipHandler = (e) => {
+      if (e.target.classList.contains("chip")) {
+        applyFilter(e.target.dataset.category);
+      }
+    };
+
+    chipGroup.addEventListener("click", chipHandler);
+    cleanupFns.push(() => chipGroup.removeEventListener("click", chipHandler));
+  }
+}
+
+// ======================================================
+// CLEANUP WHEN LEAVING PAGE
+// ======================================================
 export function cleanupWardrobePage() {
+  cleanupFns.forEach((fn) => fn());
+  cleanupFns = [];
   allWardrobeItems = [];
 }

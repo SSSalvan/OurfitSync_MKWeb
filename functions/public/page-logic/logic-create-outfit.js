@@ -194,7 +194,7 @@ export function initCreateOutfitPage() {
       );
       window.dispatchEvent(
         new CustomEvent('navigate', { detail: { page: 'outfit-summary' } })
-      );x
+      );
     };
     createBtn.addEventListener('click', createHandler);
     cleanupFns.push(() => createBtn.removeEventListener('click', createHandler));

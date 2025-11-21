@@ -142,7 +142,7 @@ export function initEditOutfitPage(params = {}) {
     gridSlots.forEach(slot => {
       const part = slot.dataset.part;
       const img = slot.querySelector("img");
-      img.src = outfit[part]?.imageUrl || "images/placeholder-item.png";
+      img.src = outfit[part]?.imageUrl || "images/placeholder.png";
 
       const handler = () => {
         window.loadPage("wardrobe", {
@@ -161,16 +161,18 @@ export function initEditOutfitPage(params = {}) {
   }
 
   // ------------------------------------------------------------
-  // TIME BUTTONS
+  // TIME BUTTONS — FIXED
   // ------------------------------------------------------------
   function buildTimeButtons() {
     timeBtns.forEach(btn => {
+      // normalize everything
       const t = btn.dataset.time.toLowerCase();
 
+      // activate correct button on load
       if (t === selectedTime) btn.classList.add("is-active");
 
       const handler = () => {
-        selectedTime = t;
+        selectedTime = t; // always lowercase
         timeBtns.forEach(b => b.classList.remove("is-active"));
         btn.classList.add("is-active");
       };
