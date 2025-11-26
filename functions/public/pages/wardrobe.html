@@ -1,4 +1,6 @@
 <section class="wardrobe-page" id="wardrobe-page">
+
+  <!-- Header -->
   <header class="wardrobe-header">
     <h3>My Wardrobe</h3>
     <button id="nav-to-favorites" class="btn-likes">
@@ -6,6 +8,7 @@
     </button>
   </header>
 
+  <!-- Category Filter Chips -->
   <div class="chip-group" id="wardrobe-filter-chips">
     <button class="chip active" data-category="all">All</button>
     <button class="chip" data-category="Top">Top</button>
@@ -15,10 +18,14 @@
     <button class="chip" data-category="Accessory">Accessory</button>
   </div>
 
-  <div class="item-grid" id="wardrobe-grid-container">
-    </div>
+  <!-- Correct grid container with proper class -->
+  <div id="wardrobe-grid-container" class="item-grid">
+    <!-- JS will insert .item-card elements here -->
+  </div>
 
-  <p id="wardrobe-empty-message" class="empty-list-message" style="display: none;">
+  <!-- Empty state -->
+  <p id="wardrobe-empty-message" class="empty-list-message" style="display:none;">
     Tidak ada item dalam kategori ini.
   </p>
+
 </section>

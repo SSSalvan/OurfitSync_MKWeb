@@ -133,6 +133,7 @@
 /* INI ADALAH BAGIAN "PICTURES" / "CANVAS" */
 .section {
   margin-bottom: 2rem;
+  margin-left: 5rem;
 }
 .section h3 {
   color: #000;

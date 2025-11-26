@@ -1,59 +1,66 @@
+/* ================================
+   PAGE LAYOUT
+================================ */
 .wardrobe-page {
   padding-left: var(--sidebar-width, 140px);
-  padding-top: 150px; /* Jarak dari header logo */
+  padding-top: 120px; 
   padding-right: 40px;
-  padding-bottom: 100px;
+  padding-bottom: 80px;
   max-width: 1000px;
   margin: 0 auto;
 }
 
+/* Header */
 .wardrobe-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.8rem;
 }
 
 .wardrobe-header h3 {
-  font-size: 1.8rem;
-  color: #000;
+  font-size: 1.9rem;
   font-weight: 600;
+  color: #000;
 }
 
+/* Likes Button */
 .btn-likes {
   background-color: #f3dbdc;
   color: #000;
   border: none;
-  padding: 0.8rem 1.2rem;
+  padding: 0.7rem 1.3rem;
   border-radius: 20px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: 0.2s ease;
 }
 .btn-likes:hover {
   background-color: #e3b9ba;
   box-shadow: 0 4px 10px rgba(0,0,0,0.1);
 }
 
-/* Filter Chips */
+/* ================================
+   FILTER CHIPS
+================================ */
 .chip-group {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.8rem;
   justify-content: center;
+  gap: 0.8rem;
   margin-bottom: 2rem;
 }
 
 .chip {
   padding: 0.6rem 1.2rem;
+  background: #fff;
+  color: #333;
+  border-radius: 20px;
+  border: 1px solid #ddd;
   font-size: 0.9rem;
   font-weight: 500;
-  color: #333;
-  background-color: #fff;
-  border: 1px solid #ddd;
-  border-radius: 20px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: 0.2s ease;
 }
 
 .chip:hover {
@@ -61,75 +68,87 @@
 }
 
 .chip.active {
-  background-color: var(--panel, #f4d8da); /* Warna pink dari sidebar */
+  background-color: var(--panel, #f4d8da);
   color: #000;
   border-color: var(--panel, #f4d8da);
 }
 
-/* Grid Item (Meniru GridLayoutManager(2)) */
+/* ================================
+   GRID LAYOUT 
+   (Final fix for overly large images)
+================================ */
 .item-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 1.2rem;
+  justify-items: center;  /* ensures centering & avoids full width stretch */
 }
 
-/* Style untuk card item (dipakai juga oleh 'shuffle') */
+/* ================================
+   ITEM CARD
+================================ */
 .item-card {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 1 / 1; /* Membuat kartu jadi kotak */
   background: #fff;
   border-radius: 16px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.07);
   overflow: hidden;
-  transition: all 0.2s ease;
+  width: 140px;      /* smaller item size */
+  height: 140px;     /* fixed height to prevent full-page stretch */
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.07);
+  transition: 0.2s ease;
+  position: relative;
 }
 
 .item-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.12);
 }
 
+/* Ensures image fits the square perfectly */
 .item-card img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-/* Tombol Like di atas kartu */
+/* ================================
+   LIKE BUTTON
+================================ */
 .like-btn {
   position: absolute;
-  top: 10px;
-  right: 10px;
-  width: 36px;
-  height: 36px;
-  background-color: rgba(255, 255, 255, 0.7);
-  border: none;
+  top: 8px;
+  right: 8px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
-  cursor: pointer;
+  background: rgba(255,255,255,0.75);
+  border: none;
   display: flex;
-  align-items: center;
   justify-content: center;
+  align-items: center;
   backdrop-filter: blur(4px);
+  cursor: pointer;
 }
 
 .like-btn svg {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   stroke: #000;
   stroke-width: 2;
   fill: none;
 }
 
 .like-btn.liked svg {
-  fill: #ff0000; /* Warna merah saat di-like */
-  stroke: #ff0000;
+  fill: #ff4d4d;
+  stroke: #ff4d4d;
 }
 
+/* ================================
+   EMPTY MESSAGE
+================================ */
 .empty-list-message {
   color: #777;
-  font-style: italic;
   font-size: 1rem;
-  padding: 2rem;
+  font-style: italic;
+  margin-top: 2rem;
   text-align: center;
 }

@@ -1,90 +1,106 @@
-// File: page-logic/logic-save-calendar.js
-
-import { db, auth } from '../firebase-init.js';
-import {
-  collection,
-  addDoc,
-  Timestamp
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+// ------------------------------------------------------------
+// SAVE CALENDAR PAGE — UI-PERFECT VERSION
+// Matches save-calendar.html + save-calendar.css exactly
+// Uses Express backend for saving events
+// ------------------------------------------------------------
+import { auth } from "../firebase-init.js";
 
 let currentYear;
-let currentMonth; // 0-11
-let selectedDateISO = null; // "YYYY-MM-DD"
+let currentMonth;
+let selectedDateISO = null;
 let selectedTimeSlot = null;
 let cleanupFns = [];
 
 const MONTH_NAMES = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December"
+  "January","February","March","April","May","June",
+  "July","August","September","October","November","December"
 ];
 
+// Convert Sunday=0 to Monday=0
 function getMondayIndex(date) {
-  // convert JS Sunday=0..Saturday=6 → Monday=0..Sunday=6
-  const weekday = date.getDay(); // 0-6
-  return (weekday + 6) % 7;
+  return (date.getDay() + 6) % 7;
 }
 
+// ------------------------------------------------------------
+// RENDER CALENDAR (matches CSS class names exactly)
+// ------------------------------------------------------------
 function renderCalendar() {
-  const label = document.getElementById("sc-month-label");
-  const daysContainer = document.getElementById("sc-calendar-days");
-  if (!label || !daysContainer) return;
+  const grid = document.getElementById("sc-calendar-days");
+  if (!grid) return;
 
-  label.textContent = `${MONTH_NAMES[currentMonth]} ${currentYear}`;
-  daysContainer.innerHTML = "";
+  grid.innerHTML = "";
 
-  const firstOfMonth = new Date(currentYear, currentMonth, 1);
+  const firstDay = new Date(currentYear, currentMonth, 1);
+  const firstDayIndex = getMondayIndex(firstDay);
+
   const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
   const daysInPrevMonth = new Date(currentYear, currentMonth, 0).getDate();
 
-  const leadingEmpty = getMondayIndex(firstOfMonth);
-
-  // prev month faint days
-  for (let i = leadingEmpty - 1; i >= 0; i--) {
-    const dayNum = daysInPrevMonth - i;
-    const el = document.createElement("div");
-    el.className = "sc-day sc-day--disabled";
-    el.textContent = dayNum;
-    daysContainer.appendChild(el);
-  }
-
-  // current month days
-  for (let d = 1; d <= daysInMonth; d++) {
+  for (let i = 0; i < 42; i++) {
     const btn = document.createElement("button");
-    btn.className = "sc-day sc-day--current";
-    btn.textContent = d;
+    btn.className = "sc-day";
 
-    const dateObj = new Date(currentYear, currentMonth, d);
-    const iso = dateObj.toISOString().slice(0, 10); // YYYY-MM-DD
-    btn.dataset.date = iso;
+    let dayNum;
+    let inMonth = false;
 
-    if (selectedDateISO === iso) {
-      btn.classList.add("is-selected");
+    if (i < firstDayIndex) {
+      // previous month
+      dayNum = daysInPrevMonth - firstDayIndex + 1 + i;
+      btn.classList.add("sc-day--disabled");
+    }
+    else if (i >= firstDayIndex + daysInMonth) {
+      // next month
+      dayNum = i - (firstDayIndex + daysInMonth) + 1;
+      btn.classList.add("sc-day--disabled");
+    }
+    else {
+      // current month
+      inMonth = true;
+      dayNum = i - firstDayIndex + 1;
+      btn.classList.add("sc-day--current");
     }
 
-    const handler = () => {
-      selectedDateISO = iso;
-      updateSelectedDayHighlight();
-    };
-    btn.addEventListener("click", handler);
-    cleanupFns.push(() => btn.removeEventListener("click", handler));
+    btn.textContent = dayNum;
 
-    daysContainer.appendChild(btn);
+    if (inMonth) {
+      const mm = String(currentMonth + 1).padStart(2, "0");
+      const dd = String(dayNum).padStart(2, "0");
+      const dateKey = `${currentYear}-${mm}-${dd}`;
+
+      btn.dataset.date = dateKey;
+
+      btn.addEventListener("click", () => {
+        selectedDateISO = dateKey;
+        updateSelectedDayHighlight();
+      });
+    } else {
+      btn.disabled = true;
+    }
+
+    grid.appendChild(btn);
+  }
+}
+
+// ------------------------------------------------------------
+// UPDATE SELECTED DAY (correct class: .is-selected)
+// ------------------------------------------------------------
+function updateSelectedDayHighlight() {
+  document.querySelectorAll(".sc-day").forEach(btn =>
+    btn.classList.remove("is-selected")
+  );
+
+  if (selectedDateISO) {
+    const btn = document.querySelector(`.sc-day[data-date="${selectedDateISO}"]`);
+    if (btn) btn.classList.add("is-selected");
   }
 
-  // (optional) add trailing next-month days to fill grid – not required visually
+  const lbl = document.getElementById("sc-month-label");
+  if (lbl) lbl.textContent = `${MONTH_NAMES[currentMonth]} ${currentYear}`;
 }
 
-function updateSelectedDayHighlight() {
-  const days = document.querySelectorAll(".sc-day.sc-day--current");
-  days.forEach(day => {
-    if (day.dataset.date === selectedDateISO) {
-      day.classList.add("is-selected");
-    } else {
-      day.classList.remove("is-selected");
-    }
-  });
-}
-
+// ------------------------------------------------------------
+// MONTH NAV
+// ------------------------------------------------------------
 function setupMonthNav() {
   const prevBtn = document.getElementById("sc-prev-month");
   const nextBtn = document.getElementById("sc-next-month");
@@ -97,6 +113,7 @@ function setupMonthNav() {
         currentYear--;
       }
       renderCalendar();
+      updateSelectedDayHighlight();
     };
     prevBtn.addEventListener("click", handler);
     cleanupFns.push(() => prevBtn.removeEventListener("click", handler));
@@ -110,111 +127,101 @@ function setupMonthNav() {
         currentYear++;
       }
       renderCalendar();
+      updateSelectedDayHighlight();
     };
     nextBtn.addEventListener("click", handler);
-  cleanupFns.push(() => nextBtn.removeEventListener("click", handler));
+    cleanupFns.push(() => nextBtn.removeEventListener("click", handler));
   }
 }
 
+// ------------------------------------------------------------
+// TIME BUTTONS (correct class: .is-selected)
+// ------------------------------------------------------------
 function setupTimeOptions() {
-  const container = document.getElementById("sc-time-options");
-  if (!container) return;
+  const buttons = document.querySelectorAll(".sc-time-btn");
 
-  const buttons = container.querySelectorAll(".sc-time-btn");
   buttons.forEach(btn => {
-    const slot = btn.dataset.slot;
     const handler = () => {
-      selectedTimeSlot = slot;
       buttons.forEach(b => b.classList.remove("is-selected"));
       btn.classList.add("is-selected");
+
+      selectedTimeSlot = btn.dataset.slot; // morning / noon / afternoon / night
     };
     btn.addEventListener("click", handler);
     cleanupFns.push(() => btn.removeEventListener("click", handler));
   });
 }
 
+// ------------------------------------------------------------
+// RETRIEVE OUTFIT SELECTION
+// ------------------------------------------------------------
 function getCurrentOutfitSelection() {
   try {
     const raw = sessionStorage.getItem("currentOutfitSelection");
-    if (!raw) return {};
-    return JSON.parse(raw);
-  } catch (e) {
-    console.warn("Failed to read outfit from sessionStorage", e);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
     return {};
   }
 }
 
-async function handleSaveToCalendar() {
+// ------------------------------------------------------------
+// SAVE EVENT TO EXPRESS BACKEND
+// ------------------------------------------------------------
+async function saveEventToBackend() {
   const user = auth.currentUser;
-  if (!user) {
-    alert("You must be logged in to save to calendar.");
-    return;
-  }
+  if (!user) return alert("Please log in first.");
 
-  if (!selectedDateISO) {
-    alert("Please select a date.");
-    return;
-  }
+  if (!selectedDateISO) return alert("Choose a date.");
+  if (!selectedTimeSlot) return alert("Choose a time.");
 
-  if (!selectedTimeSlot) {
-    alert("Please select a time for your outfit.");
-    return;
-  }
+  const occasion = document.getElementById("sc-occasion-input")?.value.trim() || "";
+  const selection = getCurrentOutfitSelection();
 
-  const occasionInput = document.getElementById("sc-occasion-input");
-  const occasion = (occasionInput?.value || "").trim();
+  const map = { top: "Top", bottom: "Bottom", shoes: "Shoes", bag: "Bag" };
+  const outfit = {};
 
-  const outfitSelection = getCurrentOutfitSelection();
+  Object.keys(selection).forEach(key => {
+    const cat = map[key];
+    const item = selection[key];
 
-  // Convert our outfit selection into your required Firestore structure
-  const outfitMap = {};
+    if (cat && item) {
+      outfit[cat] = {
+        category: cat,
+        color: item.color || "",
+        imageUrl: item.imageUrl || "",
+        liked: false,
+        style: item.style || ""
+      };
+    }
+  });
 
-  const categoryMap = {
-    top: "Top",
-    bottom: "Bottom",
-    shoes: "Shoes",
-    bag: "Bag"
-  };
-
-  for (const key of Object.keys(outfitSelection)) {
-    const item = outfitSelection[key];
-    const properCategory = categoryMap[key];
-
-    outfitMap[properCategory] = {
-      category: properCategory,
-      color: item.color || "",
-      imageUrl: item.imageUrl || "",
-      liked: false,
-      style: item.style || "",
-    };
-  }
-
-  const docData = {
+  const payload = {
     userId: user.uid,
-    date: selectedDateISO,          // string "2025-11-11"
-    time: selectedTimeSlot,  // keep lowercase, since your icons use lowercase slots
-    occasion: occasion,
-    isLiked: false,
-    outfit: outfitMap,
-    timestamp: Timestamp.now()
+    date: selectedDateISO,
+    time: selectedTimeSlot,
+    occasion,
+    outfit,
+    timestamp: new Date().toISOString()
   };
 
-  console.log("Saving event:", docData);
+  const res = await fetch("http://localhost:5050/api/calendar", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
 
-  await addDoc(collection(db, "calendarEvents"), docData);
+  if (!res.ok) {
+    console.error(await res.text());
+    return alert("Failed to save.");
+  }
 
-  alert("Outfit saved to calendar!");
-
-  // go back to calendar page
+  alert("Saved!");
   window.loadPage("calendar");
 }
 
-function capitalize(str) {
-  return str.charAt(0).toUpperCase() + str.slice(1);
-}
-
-/* ----------- PUBLIC API ----------- */
-
+// ------------------------------------------------------------
+// INIT PAGE
+// ------------------------------------------------------------
 export function initSaveCalendarPage() {
   const root = document.getElementById("save-calendar-page");
   if (!root) return;
@@ -222,39 +229,29 @@ export function initSaveCalendarPage() {
   const today = new Date();
   currentYear = today.getFullYear();
   currentMonth = today.getMonth();
-  selectedDateISO = today.toISOString().slice(0, 10); // default: today
+  selectedDateISO = today.toISOString().slice(0, 10);
 
   renderCalendar();
   setupMonthNav();
   setupTimeOptions();
   updateSelectedDayHighlight();
 
-  // Save button
   const saveBtn = document.getElementById("sc-save-btn");
   if (saveBtn) {
-    const handler = () => {
-      handleSaveToCalendar().catch(err => {
-        console.error("Failed to save outfit to calendar:", err);
-        alert("Failed to save outfit. Please try again.");
-      });
-    };
+    const handler = () => saveEventToBackend();
     saveBtn.addEventListener("click", handler);
     cleanupFns.push(() => saveBtn.removeEventListener("click", handler));
   }
 
-  // Back button → go back to outfit summary
-  const backBtn = document.querySelector('.backBtn');
+  const backBtn = document.querySelector(".backBtn");
   if (backBtn) {
-    const handler = () => {
-      window.dispatchEvent(
-        new CustomEvent('navigate', { detail: { page: 'outfit-summary' } })
-      );
-    };
-    backBtn.addEventListener('click', handler);
-    cleanupFns.push(() => backBtn.removeEventListener('click', handler));
+    const handler = () => window.loadPage("outfit-summary");
+    backBtn.addEventListener("click", handler);
+    cleanupFns.push(() => backBtn.removeEventListener("click", handler));
   }
 }
 
+// ------------------------------------------------------------
 export function cleanupSaveCalendarPage() {
   cleanupFns.forEach(fn => fn());
   cleanupFns = [];

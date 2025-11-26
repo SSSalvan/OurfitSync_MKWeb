@@ -12,14 +12,24 @@
   background-color: #fdfbf7; /* Warna background cream muda */
 }
 
+/* Judul OUTFITSYNC Pink */
+.page-header-title {
+  color: #edb2b2; /* Pink pastel sesuai figma */
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  margin-bottom: 20px;
+  text-transform: uppercase;
+}
+
 /* Kartu Putih di Tengah */
 .card-container {
   background: #fff;
   width: 90%;
   max-width: 600px;
   min-height: 400px;
-  margin-top: 200px;
   border-radius: 20px;
+  margin-top: 200px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
   padding: 40px;
   display: flex;
