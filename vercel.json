@@ -8,7 +8,9 @@
   ],
   "routes": [
     { "src": "/api/(.*)", "dest": "/backend/index.js" },
-    { "src": "/", "dest": "/backend/public/index.html" },
-    { "src": "/(.*)", "dest": "/backend/public/$1" }
+
+    { "src": "/(.*\\.(css|js|ico|png|jpg|svg))$", "dest": "/public/$1" },
+
+    { "src": "/(.*)", "dest": "/public/index.html" }
   ]
 }
