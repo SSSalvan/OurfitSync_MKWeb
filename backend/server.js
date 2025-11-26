@@ -8,11 +8,24 @@ dotenv.config();
 const app = express();
 app.use(express.json({ limit: "10mb" }));
 
+// ✅ FIX: CORS dengan whitelist domain yang benar
 app.use(
   cors({
-    origin: "*",
+    origin: [
+      "https://ourfit-sync-mk-web.vercel.app",
+      "http://localhost:3000",
+      "http://localhost:8000",
+      "http://127.0.0.1:3000",
+      "http://127.0.0.1:8000"
+    ],
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"]
   })
 );
+
+// Preflight request handler
+app.options('*', cors());
 
 // ======================================
 // FIREBASE ADMIN INIT
@@ -28,6 +41,13 @@ if (!admin.apps.length) {
 const db = admin.firestore();
 
 // ======================================
+// HEALTH CHECK
+// ======================================
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', message: 'Backend is running' });
+});
+
+// ======================================
 // WARDROBE ROUTES
 // ======================================
 
@@ -35,6 +55,10 @@ const db = admin.firestore();
 app.post("/api/wardrobe", async (req, res) => {
   try {
     const { userId, name, imageUrl, category, color } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({ error: "userId is required" });
+    }
 
     const docRef = await db.collection("wardrobe").add({
       userId,
@@ -47,6 +71,7 @@ app.post("/api/wardrobe", async (req, res) => {
 
     res.json({ id: docRef.id, message: "Item berhasil ditambahkan" });
   } catch (err) {
+    console.error("Error adding wardrobe item:", err);
     res.status(500).json({ error: "Gagal menambahkan item" });
   }
 });
@@ -55,6 +80,10 @@ app.post("/api/wardrobe", async (req, res) => {
 app.get("/api/wardrobe", async (req, res) => {
   try {
     const { userId } = req.query;
+
+    if (!userId) {
+      return res.status(400).json({ error: "userId is required" });
+    }
 
     const snapshot = await db
       .collection("wardrobe")
@@ -68,6 +97,7 @@ app.get("/api/wardrobe", async (req, res) => {
 
     res.json(items);
   } catch (err) {
+    console.error("Error fetching wardrobe:", err);
     res.status(500).json({ error: "Gagal mengambil data" });
   }
 });
@@ -80,12 +110,23 @@ app.get("/api/wardrobe", async (req, res) => {
 app.get("/api/users/:uid", async (req, res) => {
   try {
     const uid = req.params.uid;
+    
+    if (!uid) {
+      return res.status(400).json({ error: "uid is required" });
+    }
+
     const doc = await db.collection("users").doc(uid).get();
 
-    if (!doc.exists) return res.status(404).json({ error: "User not found" });
+    if (!doc.exists) {
+      return res.status(404).json({ error: "User not found" });
+    }
 
-    res.json(doc.data());
+    res.json({
+      uid: uid,
+      ...doc.data()
+    });
   } catch (err) {
+    console.error("Error fetching user:", err);
     res.status(500).json({ error: "Gagal mengambil user" });
   }
 });
@@ -96,10 +137,15 @@ app.put("/api/users/:uid", async (req, res) => {
     const uid = req.params.uid;
     const data = req.body;
 
+    if (!uid) {
+      return res.status(400).json({ error: "uid is required" });
+    }
+
     await db.collection("users").doc(uid).set(data, { merge: true });
 
     res.json({ message: "Profil berhasil diperbarui" });
   } catch (err) {
+    console.error("Error updating user:", err);
     res.status(500).json({ error: "Gagal update profile" });
   }
 });
@@ -111,6 +157,12 @@ app.put("/api/users/:uid", async (req, res) => {
 // Create Event
 app.post("/api/calendar", async (req, res) => {
   try {
+    const { userId } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({ error: "userId is required" });
+    }
+
     const data = req.body;
     const docRef = await db.collection("calendar").add({
       ...data,
@@ -119,6 +171,7 @@ app.post("/api/calendar", async (req, res) => {
 
     res.json({ id: docRef.id, message: "Event ditambahkan" });
   } catch (err) {
+    console.error("Error creating event:", err);
     res.status(500).json({ error: "Gagal tambah event" });
   }
 });
@@ -127,6 +180,10 @@ app.post("/api/calendar", async (req, res) => {
 app.get("/api/calendar/user/:uid", async (req, res) => {
   try {
     const uid = req.params.uid;
+
+    if (!uid) {
+      return res.status(400).json({ error: "uid is required" });
+    }
 
     const snapshot = await db
       .collection("calendar")
@@ -140,6 +197,7 @@ app.get("/api/calendar/user/:uid", async (req, res) => {
 
     res.json(events);
   } catch (err) {
+    console.error("Error fetching calendar:", err);
     res.status(500).json({ error: "Gagal mengambil event" });
   }
 });
@@ -150,10 +208,15 @@ app.put("/api/calendar/:id", async (req, res) => {
     const eventId = req.params.id;
     const data = req.body;
 
+    if (!eventId) {
+      return res.status(400).json({ error: "eventId is required" });
+    }
+
     await db.collection("calendar").doc(eventId).update(data);
 
     res.json({ message: "Event diperbarui" });
   } catch (err) {
+    console.error("Error updating event:", err);
     res.status(500).json({ error: "Gagal update event" });
   }
 });
@@ -163,12 +226,25 @@ app.delete("/api/calendar/:id", async (req, res) => {
   try {
     const eventId = req.params.id;
 
+    if (!eventId) {
+      return res.status(400).json({ error: "eventId is required" });
+    }
+
     await db.collection("calendar").doc(eventId).delete();
 
     res.json({ message: "Event dihapus" });
   } catch (err) {
+    console.error("Error deleting event:", err);
     res.status(500).json({ error: "Gagal hapus event" });
   }
+});
+
+// ======================================
+// ERROR HANDLER
+// ======================================
+app.use((err, req, res, next) => {
+  console.error("Unhandled error:", err);
+  res.status(500).json({ error: "Internal server error" });
 });
 
 export default app;

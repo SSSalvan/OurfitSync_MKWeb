@@ -1,13 +1,10 @@
 {
   "version": 2,
+  "buildCommand": "echo 'Frontend is static, no build needed'",
   "builds": [
     {
       "src": "backend/index.js",
       "use": "@vercel/node"
-    },
-    {
-      "src": "frontend/**",
-      "use": "@vercel/static"
     }
   ],
   "routes": [
@@ -19,5 +16,9 @@
       "src": "/(.*)",
       "dest": "frontend/$1"
     }
-  ]
+  ],
+  "env": {
+    "FIREBASE_SERVICE_ACCOUNT": "@firebase_service_account"
+  },
+  "public": "frontend"
 }
