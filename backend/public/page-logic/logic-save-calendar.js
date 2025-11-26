@@ -1,7 +1,5 @@
 // ------------------------------------------------------------
 // SAVE CALENDAR PAGE — UI-PERFECT VERSION
-// Matches save-calendar.html + save-calendar.css exactly
-// Uses Express backend for saving events
 // ------------------------------------------------------------
 import { auth } from "../firebase-init.js";
 
@@ -204,7 +202,8 @@ async function saveEventToBackend() {
     timestamp: new Date().toISOString()
   };
 
-  const res = await fetch("http://localhost:5050/api/calendar", {
+  // FIX: GANTI DENGAN URL VERCEL ANDA
+  const res = await fetch("https://ourfit-sync-mk-web.vercel.app/api/calendar", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload)

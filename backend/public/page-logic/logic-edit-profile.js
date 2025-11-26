@@ -5,8 +5,7 @@ import { ref, uploadBytes } from "https://www.gstatic.com/firebasejs/10.12.2/fir
 export function initEditProfilePage() {
   const currentUser = auth.currentUser;
   
-  // Muat script non-module (editprl.js Anda)
-  // Perlu path '../' karena file ini ada di dalam 'page-logic'
+
   const script = document.createElement('script');
   script.src = 'pages/edit-profile.js'; 
   script.id = 'page-script';

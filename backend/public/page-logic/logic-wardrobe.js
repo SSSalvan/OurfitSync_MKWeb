@@ -1,21 +1,15 @@
-// logic-wardrobe.js — Fully patched + sized correctly + correct structure
 import { auth } from "../firebase-init.js";
+import { fetchWardrobe } from "../utils/api.js"; // <-- DIUBAH
 
 let allWardrobeItems = [];
 let cleanupFns = [];
 
-const API_BASE = "http://localhost:5050";
-
 // ======================================================
-// FETCH WARDROBE FROM EXPRESS
+// FETCH WARDROBE DARI API.JS
 // ======================================================
-async function fetchWardrobeExpress(userId) {
-  const res = await fetch(`${API_BASE}/api/wardrobe?userId=${userId}`);
-
-  if (!res.ok) throw new Error("Failed to fetch wardrobe");
-  const data = await res.json();
-
-  return data.items || [];
+async function fetchWardrobeApi(userId) {
+  // Menggunakan fungsi dari api.js
+  return await fetchWardrobe(userId); 
 }
 
 // ======================================================
@@ -76,7 +70,7 @@ function applyFilter(category) {
 // ======================================================
 async function loadWardrobe(userId) {
   try {
-    allWardrobeItems = await fetchWardrobeExpress(userId);
+    allWardrobeItems = await fetchWardrobeApi(userId); // <-- DIUBAH
     applyFilter("all");
   } catch (err) {
     console.error("Wardrobe load error:", err);

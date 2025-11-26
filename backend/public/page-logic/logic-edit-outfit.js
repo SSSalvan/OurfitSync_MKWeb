@@ -1,11 +1,13 @@
 // ------------------------------------------------------------
-// FINAL EDIT OUTFIT — USING LOCAL EXPRESS BACKEND
+// EDIT OUTFIT — MENGGUNAKAN API.JS
 // ------------------------------------------------------------
 import { auth } from "../firebase-init.js";
+// --- BARU: Import fungsi API
+import { updateCalendarEvent, deleteCalendarEvent } from "../utils/api.js"; 
 
 let cleanupFns = [];
 
-const API_BASE = "http://localhost:5050/api";
+// const API_BASE = "https://ourfit-sync-mk-web.vercel.app/api"; // <-- DIHAPUS
 
 // ------------------------------------------------------------
 // HELPERS
@@ -183,7 +185,7 @@ export function initEditOutfitPage(params = {}) {
   }
 
   // ------------------------------------------------------------
-  // SAVE EVENT (LOCAL EXPRESS PUT)
+  // SAVE EVENT (MENGGUNAKAN API.JS)
   // ------------------------------------------------------------
   async function saveEvent() {
     if (!eventID) return alert("Cannot save: event ID missing.");
@@ -201,39 +203,32 @@ export function initEditOutfitPage(params = {}) {
       outfit: cleaned
     };
 
-    const res = await fetch(`${API_BASE}/calendar/${eventID}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body)
-    });
-
-    if (!res.ok) {
-      console.error("SAVE ERROR:", await res.text());
-      alert("Failed to save event.");
-      return;
+    try {
+      // --- DIUBAH: Menggunakan fungsi terpusat dari api.js
+      await updateCalendarEvent(eventID, body); 
+      window.loadPage("calendar");
+    } catch (error) {
+      console.error("SAVE ERROR:", error);
+      alert("Failed to save event. " + error.message);
     }
-
-    window.loadPage("calendar");
   }
 
   // ------------------------------------------------------------
-  // DELETE EVENT (LOCAL EXPRESS DELETE)
+  // DELETE EVENT (MENGGUNAKAN API.JS)
   // ------------------------------------------------------------
   async function deleteEventFn() {
     if (!eventID) return alert("Cannot delete: event ID missing.");
-    if (!confirm("Delete this event?")) return;
 
-    const res = await fetch(`${API_BASE}/calendar/${eventID}`, {
-      method: "DELETE"
-    });
+    if (!confirm("Delete this event?")) return; 
 
-    if (!res.ok) {
-      console.error("DELETE ERROR:", await res.text());
-      alert("Failed to delete event.");
-      return;
+    try {
+      // --- DIUBAH: Menggunakan fungsi terpusat dari api.js
+      await deleteCalendarEvent(eventID);
+      window.loadPage("calendar");
+    } catch (error) {
+      console.error("DELETE ERROR:", error);
+      alert("Failed to delete event. " + error.message);
     }
-
-    window.loadPage("calendar");
   }
 
   // ------------------------------------------------------------

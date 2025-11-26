@@ -1,17 +1,10 @@
 // File: page-logic/logic-create-outfit.js
 
-import { db, auth } from '../firebase-init.js';
-import {
-  collection,
-  query,
-  where,
-  getDocs
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { auth } from '../firebase-init.js';
+// DIUBAH: Menghapus import Firestore, menambahkan import api.js
+import { fetchWardrobe } from '../utils/api.js'; 
 
 let cleanupFns = [];
-
-/* ---------- RENDERING & SELECTION ---------- */
-
 // Make one item active inside its strip
 function setActiveItem(strip, item) {
   const items = strip.querySelectorAll('.co-item');
@@ -37,25 +30,56 @@ function renderStrip(stripId, items) {
       itemData.photoURL ||
       'assets/placeholder.png';
     img.alt = itemData.name || 'Wardrobe item';
+    
+    // Store data in dataset for easy retrieval later
+    wrapper.dataset.item = JSON.stringify(itemData);
 
     wrapper.appendChild(img);
     strip.appendChild(wrapper);
 
     // click to select
-    const clickHandler = () => setActiveItem(strip, wrapper);
-    wrapper.addEventListener('click', clickHandler);
-    cleanupFns.push(() => wrapper.removeEventListener('click', clickHandler));
-
-    // default: first item selected
-    if (index === 0) {
-      wrapper.classList.add('is-active');
-    }
+    const handler = () => setActiveItem(strip, wrapper);
+    wrapper.addEventListener('click', handler);
+    cleanupFns.push(() => wrapper.removeEventListener('click', handler));
   });
+
+  // Automatically select the first item if present
+  const firstItem = strip.querySelector('.co-item');
+  if (firstItem) setActiveItem(strip, firstItem);
 }
 
-// Get selected item in a strip
-function getSelectedItem(strip) {
-  return strip.querySelector('.co-item.is-active');
+// Shuffle items in a strip
+function shuffleStrip(stripId) {
+    const strip = document.getElementById(stripId);
+    if (!strip) return;
+    const items = [...strip.querySelectorAll('.co-item')];
+    if (items.length <= 1) return;
+
+    let currentIndex = 0;
+    // Find the currently active item
+    const activeItem = strip.querySelector('.co-item.is-active');
+    if (activeItem) {
+        currentIndex = items.indexOf(activeItem);
+    }
+    
+    // Calculate the next index, wrapping around
+    let nextIndex = (currentIndex + 1) % items.length;
+    
+    // Set the new active item
+    setActiveItem(strip, items[nextIndex]);
+}
+
+function shuffleAllStrips() {
+  const stripIds = [
+    'co-tops-strip',
+    'co-bottoms-strip',
+    'co-shoes-strip',
+    'co-bags-strip'
+  ];
+
+  stripIds.forEach(id => {
+      shuffleStrip(id);
+  });
 }
 
 // Collect the current outfit selection from all strips
@@ -73,82 +97,45 @@ function collectCurrentSelection() {
     const strip = document.getElementById(stripId);
     if (!strip) continue;
 
-    const selected = getSelectedItem(strip);
-    if (!selected) continue;
+    const selected = strip.querySelector('.co-item.is-active');
+    if (!selected || !selected.dataset.item) continue;
 
-    const img = selected.querySelector('img');
-    result[category] = {
-      imageUrl: img?.src || null,
-      alt: img?.alt || ''
-    };
+    try {
+        // Ambil data item yang sudah disimpan di dataset
+        result[category] = JSON.parse(selected.dataset.item);
+    } catch(e) {
+        console.error(`Failed to parse item data for ${category}`, e);
+    }
   }
 
   return result;
 }
 
-/* ---------- FIRESTORE LOAD ---------- */
+/* ---------- DATA LOADING (MENGGUNAKAN API.JS) ---------- */
 
 async function loadCreateData(uid) {
-  const qRef = query(
-    collection(db, 'wardrobeItems'),
-    where('userId', '==', uid)
-  );
+  try {
+    const allItems = await fetchWardrobe(uid); // <-- Menggunakan fungsi API
 
-  const snapshot = await getDocs(qRef);
-  const all = snapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+    const cat = v => (v || '').toLowerCase();
 
-  const cat = v => (v || '').toLowerCase();
+    const tops = allItems.filter(i => cat(i.category) === 'top');
+    const bottoms = allItems.filter(i => cat(i.category) === 'bottom');
+    const shoes = allItems.filter(i =>
+      ['shoe', 'shoes', 'footwear'].includes(cat(i.category))
+    );
+    const bags = allItems.filter(i => cat(i.category) === 'bag');
 
-  const tops = all.filter(i => cat(i.category) === 'top');
-  const bottoms = all.filter(i => cat(i.category) === 'bottom');
-  const shoes = all.filter(i =>
-    ['shoe', 'shoes', 'footwear'].includes(cat(i.category))
-  );
-  const bags = all.filter(i => cat(i.category) === 'bag');
+    renderStrip('co-tops-strip', tops);
+    renderStrip('co-bottoms-strip', bottoms);
+    renderStrip('co-shoes-strip', shoes);
+    renderStrip('co-bags-strip', bags);
 
-  renderStrip('co-tops-strip', tops);
-  renderStrip('co-bottoms-strip', bottoms);
-  renderStrip('co-shoes-strip', shoes);
-  renderStrip('co-bags-strip', bags);
-}
-
-function shuffleAllStrips() {
-  const stripIds = [
-    'co-tops-strip',
-    'co-bottoms-strip',
-    'co-shoes-strip',
-    'co-bags-strip'
-  ];
-
-  stripIds.forEach(id => {
-    const strip = document.getElementById(id);
-    if (!strip) return;
-
-    const items = strip.querySelectorAll('.co-item');
-    if (items.length <= 1) return;  // nothing to shuffle
-
-    const active = strip.querySelector('.co-item.is-active');
-    const activeIndex = [...items].indexOf(active);
-
-    let randomIndex = activeIndex;
-
-    // pick a different index
-    while (randomIndex === activeIndex) {
-      randomIndex = Math.floor(Math.random() * items.length);
-    }
-
-    const randomItem = items[randomIndex];
-
-    // Select the new one
-    setActiveItem(strip, randomItem);
-
-    // scroll into view
-    randomItem.scrollIntoView({
-      behavior: 'smooth',
-      inline: 'center',
-      block: 'nearest'
-    });
-  });
+  } catch (error) {
+    console.error("Error loading wardrobe data:", error);
+    // Tampilkan pesan error jika gagal
+    alert("Failed to load wardrobe data from API.");
+  }
 }
 
 

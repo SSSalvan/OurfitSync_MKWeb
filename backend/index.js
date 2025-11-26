@@ -3,18 +3,19 @@
 // ---------------------------------------------------------------
 
 import express from "express";
-import cors from "cors";
+import cors from "cors"; // Middleware CORS
 import dotenv from "dotenv";
 import admin from "firebase-admin";
 import path from "path";
 import { fileURLToPath } from "url"; // Diperlukan untuk __dirname di ESM
+import fs from "fs"; // Diperlukan untuk membaca index.html pada root route
 
 // ---------------------------------------------------------------
-// Environment + Service Account
+// Environment + Service Account Initialization
 // ---------------------------------------------------------------
 dotenv.config();
 
-// Definisikan __dirname di ES Module (Node.js modern)
+// Definisikan __filename dan __dirname di ES Module (Node.js modern)
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -22,7 +23,7 @@ const __dirname = path.dirname(__filename);
 if (!admin.apps.length) {
   try {
     if (process.env.FIREBASE_SERVICE_ACCOUNT) {
-      // 1. Jika di Vercel: Gunakan Environment Variable
+      // 1. Jika di Vercel: Gunakan Environment Variable (JSON String)
       const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
       admin.initializeApp({
         credential: admin.credential.cert(serviceAccount),
@@ -31,131 +32,91 @@ if (!admin.apps.length) {
     } else {
       // 2. Fallback jika Environment Variable tidak ditemukan
       console.warn("Warning: FIREBASE_SERVICE_ACCOUNT env not found. Running without Admin SDK initialization.");
-      
-      // Jika Anda ingin mencoba menjalankan API lokal tanpa Service Account Key,
-      // Anda bisa menghapus atau mengomentari baris di atas, tapi ini berbahaya
-      // karena API membutuhkan akses Firestore. Untuk deploy di Vercel, pastikan Env Var terisi.
     }
   } catch (error) {
-    console.error("Firebase admin initialization error during JSON parse or startup:", error.message);
-    // Jika JSON.parse gagal, ini akan mencatat error 500 dan crash.
-    // Pastikan JSON yang di-paste di Vercel benar-benar murni JSON string.
-    
-    // Melempar error agar Vercel mencatat crash dengan jelas
-    throw new Error("Failed to initialize Firebase Admin SDK. Check FIREBASE_SERVICE_ACCOUNT variable.");
+    console.error("FIREBASE ADMIN INIT ERROR:", error);
   }
 }
 
 const db = admin.firestore();
 
 // ---------------------------------------------------------------
-// Express Setup
+// Express Setup & MIDDLEWARE
 // ---------------------------------------------------------------
 const app = express();
 
-app.use(cors({ origin: "*" }));
+// --- PERBAIKAN CORS UTAMA ---
+// Origins yang diizinkan, termasuk localhost untuk debugging
+const allowedOrigins = [
+    "http://127.0.0.1:5500", // Visual Studio Code Live Server
+    "http://localhost:5500",  // Localhost biasa
+    "https://ourfit-sync-mk-web.vercel.app" // Domain produksi Anda
+];
+
+app.use(cors({ 
+    origin: (origin, callback) => {
+        // Izinkan request tanpa origin (seperti dari Postman, cURL, atau server-to-server)
+        if (!origin) return callback(null, true); 
+        
+        // Cek apakah origin termasuk dalam daftar yang diizinkan
+        if (allowedOrigins.indexOf(origin) === -1) {
+            const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+            return callback(new Error(msg), false);
+        }
+        return callback(null, true);
+    },
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    credentials: true, // PENTING: Mengizinkan kredensial/cookies (meskipun tidak dipakai sekarang)
+    optionsSuccessStatus: 204 // Untuk preflight requests
+}));
+
+
 app.use(express.json({ limit: "10mb" }));
-
-
-// --- PENTING: STATIC FILE SERVING UNTUK FRONTEND ---
-// Ini memungkinkan Vercel menyajikan file dari folder public/
-// Folder public harus berada di dalam folder backend/ (Root Directory Vercel)
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.urlencoded({ extended: true }));
 
 
 // ---------------------------------------------------------------
-// Root & Health Check (Mengembalikan index.html atau Pesan Teks)
+// ROOT & HEALTH CHECK
 // ---------------------------------------------------------------
-
+// Route Root: Mencoba melayani index.html di folder 'public' (asumsi)
 app.get("/", (req, res) => {
-    // Coba kirim index.html jika ada (jika frontend di-host bersama)
-    // Jika folder public Anda berisi index.html, ini akan menampilkannya.
-    const indexPath = path.join(__dirname, 'public', 'index.html');
-    
-    if (fs.existsSync(indexPath)) {
-        res.sendFile(indexPath);
+  try {
+    const filePath = path.join(__dirname, 'public', 'index.html');
+    if (fs.existsSync(filePath)) {
+      res.sendFile(filePath);
     } else {
-        // Jika tidak ada index.html, kirim pesan teks
-        res.send("OutfitSync backend is running on Vercel. Frontend files not found at root.");
+      res.status(200).send("OutfitSync API is running. Missing index.html in /public folder.");
     }
-});
-
-
-// ---------------------------------------------------------------
-// CALENDAR ROUTES (Tetap sama)
-// ---------------------------------------------------------------
-
-// Create event
-app.post("/api/calendar", async (req, res) => {
-  try {
-    const docRef = await db.collection("calendarEvents").add(req.body);
-    res.status(201).json({ id: docRef.id });
-  } catch (error) {
-    console.error("POST /api/calendar error:", error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Get all events for user
-app.get("/api/calendar/user/:uid", async (req, res) => {
-  try {
-    const uid = req.params.uid;
-
-    const snap = await db
-      .collection("calendarEvents")
-      .where("userId", "==", uid)
-      .get();
-
-    const events = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-    res.json(events);
-  } catch (error) {
-    console.error("GET /api/calendar/user error:", error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Update event
-app.put("/api/calendar/:id", async (req, res) => {
-  try {
-    await db.collection("calendarEvents").doc(req.params.id).update(req.body);
-    res.json({ id: req.params.id });
-  } catch (error) {
-    console.error("PUT /api/calendar/:id error:", error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Delete event
-app.delete("/api/calendar/:id", async (req, res) => {
-  try {
-    await db.collection("calendarEvents").doc(req.params.id).delete();
-    res.json({ id: req.params.id });
-  } catch (error) {
-    console.error("DELETE /api/calendar/:id error:", error);
-    res.status(500).json({ error: error.message });
+  } catch (e) {
+    res.status(500).send("Error serving root: " + e.message);
   }
 });
 
 // ---------------------------------------------------------------
-// WARDROBE ROUTES (Tetap sama)
-// ---------------------------------------------------------------
-
-// Create wardrobe item (matching Home's structure)
+// WARDROBE ROUTES
+// --------------------------------------------------------------
+// POST /api/wardrobe: Add new item
 app.post("/api/wardrobe", async (req, res) => {
   try {
+    const newItem = req.body;
+    // Asumsi: body.userId sudah divalidasi di client side sebelum POST
+    if (!newItem.userId) {
+      return res.status(400).json({ error: "Missing userId in request body" });
+    }
+
     const docRef = await db.collection("wardrobeItems").add({
-      ...req.body,
-      timestamp: new Date().toISOString(),
+      ...newItem,
+      timestamp: admin.firestore.FieldValue.serverTimestamp(),
     });
 
-    res.status(201).json({ id: docRef.id });
+    res.status(201).json({ id: docRef.id, message: "Item added successfully" });
   } catch (error) {
     console.error("POST /api/wardrobe error:", error);
     res.status(500).json({ error: error.message });
   }
 });
 
-// Load wardrobe items for user (correct structure)
+// GET /api/wardrobe?userId={userId}: Fetch all items for user
 app.get("/api/wardrobe", async (req, res) => {
   try {
     const { userId } = req.query;
@@ -181,9 +142,83 @@ app.get("/api/wardrobe", async (req, res) => {
 });
 
 
+// --------------------------------------------------------------
+// CALENDAR ROUTES (Disusun ulang agar lebih standar)
+// --------------------------------------------------------------
+// POST /api/calendar: Save new event
+app.post("/api/calendar", async (req, res) => {
+    try {
+        const newEvent = req.body;
+        if (!newEvent.userId || !newEvent.date) {
+            return res.status(400).json({ error: "Missing userId or date" });
+        }
+        
+        const docRef = await db.collection("calendarEvents").add({
+            ...newEvent,
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        });
+
+        res.status(201).json({ id: docRef.id, message: "Event added successfully" });
+    } catch (error) {
+        console.error("POST /api/calendar error:", error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// GET /api/calendar/user/:userId: Fetch all events for a user
+app.get("/api/calendar/user/:userId", async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const snap = await db
+            .collection("calendarEvents")
+            .where("userId", "==", userId)
+            // Tambahkan orderBy atau limit jika diperlukan
+            .get();
+
+        const events = snap.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+        }));
+
+        res.json({ events });
+    } catch (error) {
+        console.error("GET /api/calendar/user/:userId error:", error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// PUT /api/calendar/:id: Update an event
+app.put("/api/calendar/:id", async (req, res) => {
+    try {
+        const { id } = req.params;
+        const updateData = req.body;
+        
+        await db.collection("calendarEvents").doc(id).update(updateData);
+
+        res.status(200).json({ id, message: "Event updated successfully" });
+    } catch (error) {
+        console.error("PUT /api/calendar/:id error:", error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// DELETE /api/calendar/:id: Delete an event
+app.delete("/api/calendar/:id", async (req, res) => {
+    try {
+        const { id } = req.params;
+        await db.collection("calendarEvents").doc(id).delete();
+        res.status(204).send(); // 204 No Content for successful deletion
+    } catch (error) {
+        console.error("DELETE /api/calendar/:id error:", error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+
 // ---------------------------------------------------------------
 // USER PROFILE (Tetap sama)
 // ---------------------------------------------------------------
+// GET /api/users/:uid: Fetch user profile
 app.get("/api/users/:uid", async (req, res) => {
   try {
     const doc = await db.collection("users").doc(req.params.uid).get();
@@ -195,16 +230,8 @@ app.get("/api/users/:uid", async (req, res) => {
   }
 });
 
-app.post("/api/users/:uid", async (req, res) => {
-  try {
-    await db.collection("users").doc(req.params.uid).set(req.body, {
-      merge: true,
-    });
-    res.json({ id: req.params.uid });
-  } catch (error) {
-    console.error("POST /api/users error:", error);
-    res.status(500).json({ error: error.message });
-  }
-});
 
+// ---------------------------------------------------------------
+// Export untuk Vercel (penting untuk Node.js ES Modules)
+// ---------------------------------------------------------------
 export default app;

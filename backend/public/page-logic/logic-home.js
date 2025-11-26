@@ -1,6 +1,19 @@
-import { db, auth } from '../firebase-init.js';
-import { collection, query, where, orderBy, limit, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+import { auth } from '../firebase-init.js'; 
+import { fetchWardrobe } from '../utils/api.js'; 
 import { renderItemsToContainer } from '../utils/renderer.js';
+
+// ===== HELPER DARI API.JS =====
+// Logika untuk memisahkan item berdasarkan `isLiked` dan `timestamp`
+function processWardrobeData(items) {
+    // Sort by timestamp for "Recently Added" (assuming timestamp is stored)
+    const sortedItems = [...items].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+    
+    const recentlyAdded = sortedItems.slice(0, 10);
+    const topPicks = items.filter(item => item.isLiked === true || item.isLiked === 'true').slice(0, 10);
+    
+    return { topPicks, recentlyAdded };
+}
 
 // ----- UPDATE DATE & TIME (KODE ANDA - SUDAH BENAR) -----
 function updateDateTime() {
@@ -81,56 +94,41 @@ function updateWeather() {
   }
 }
 
-let homeListeners = [];
+let homeListeners = []; // Dikosongkan, tapi tetap dipertahankan untuk membersihkan event listeners non-API lainnya.
 
-function attachTopPicksListener(userId) {
-  const q = query(
-    collection(db, "wardrobeItems"),
-    where("userId", "==", userId),
-    where("isLiked", "==", true),
-    limit(10)
-  );
-  const unsubscribe = onSnapshot(q, (snapshot) => {
-    const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    renderItemsToContainer(items, 'top-picks-container', 'top-picks-empty');
-  }, (error) => {
-    console.error("Error fetching Top Picks: ", error);
-  });
-  homeListeners.push(unsubscribe);
+// --- FUNGSI BARU: LOAD DATA DARI VERCEL API ---
+async function loadWardrobeData(userId) {
+    try {
+        const allItems = await fetchWardrobe(userId); // <-- Menggunakan API Vercel
+        const { topPicks, recentlyAdded } = processWardrobeData(allItems);
+        
+        renderItemsToContainer(topPicks, 'top-picks-container', 'top-picks-empty');
+        renderItemsToContainer(recentlyAdded, 'recently-added-container', 'recently-added-empty');
+
+    } catch(error) {
+        console.error("Failed to load Wardrobe data from API:", error);
+        // Tampilkan pesan error jika gagal
+        renderItemsToContainer([], 'top-picks-container', 'top-picks-empty');
+        renderItemsToContainer([], 'recently-added-container', 'recently-added-empty');
+    }
 }
 
-function attachRecentlyAddedListener(userId) {
-  const q = query(
-    collection(db, "wardrobeItems"),
-    where("userId", "==", userId),
-    orderBy("timestamp", "desc"),
-    limit(10)
-  );
-  const unsubscribe = onSnapshot(q, (snapshot) => {
-    const items = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    renderItemsToContainer(items, 'recently-added-container', 'recently-added-empty');
-  }, (error) => {
-    console.error("Error fetching Recently Added: ", error);
-  });
-  homeListeners.push(unsubscribe);
-}
 
 export function initHomePage() {
   const currentUser = auth.currentUser;
   if (currentUser) {
-    attachTopPicksListener(currentUser.uid);
-    attachRecentlyAddedListener(currentUser.uid);
+    // Diganti dengan panggilan API non-realtime
+    loadWardrobeData(currentUser.uid); 
+    
     updateDateTime();
     updateWeather();
   }
   const calendarBtn = document.getElementById('home-calendar-btn');
   if (calendarBtn) {
     calendarBtn.addEventListener('click', () => {
-      // if your app uses loadPage (typical in this project)
       if (window.loadPage) {
         window.loadPage('calendar');
       } else {
-        // fallback: custom navigate event
         window.dispatchEvent(
           new CustomEvent('navigate', { detail: { page: 'calendar' } })
         );

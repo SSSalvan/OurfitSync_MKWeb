@@ -1,17 +1,9 @@
-// File: page-logic/logic-shuffle.js
-import { db, auth } from '../firebase-init.js';
-import {
-  collection,
-  query,
-  where,
-  getDocs
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+import { auth } from '../firebase-init.js';
+import { fetchWardrobe } from '../utils/api.js'; 
 
 let cleanupFns = [];
 
-/**
- * Helper: render items into a row container
- */
 function renderRow(containerId, items) {
   const container = document.getElementById(containerId);
   if (!container) return;
@@ -19,7 +11,6 @@ function renderRow(containerId, items) {
   container.innerHTML = "";
 
   if (!items || items.length === 0) {
-    // keep row but empty (mockup just looks blank), no text
     return;
   }
 
@@ -41,20 +32,11 @@ function renderRow(containerId, items) {
 }
 
 /**
- * Load all wardrobe items for current user and split by category
+ * Load all wardrobe items for current user from API and split by category
  */
 async function loadAndRenderShuffle(uid) {
-  const qRef = query(
-    collection(db, "wardrobeItems"),
-    where("userId", "==", uid)
-  );
-
   try {
-    const snapshot = await getDocs(qRef);
-    const allItems = snapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data()
-    }));
+    const allItems = await fetchWardrobe(uid); // <-- DIUBAH: Menggunakan fungsi API
 
     const norm = (v) => (v || "").toString().toLowerCase();
 
@@ -71,7 +53,7 @@ async function loadAndRenderShuffle(uid) {
     renderRow("shoes-row", shoes);
     renderRow("bags-row", bags);
   } catch (err) {
-    console.error("Failed to load shuffle items:", err);
+    console.error("Failed to load shuffle items from API:", err);
   }
 }
 
@@ -87,11 +69,13 @@ export function initShufflePage() {
   // Create Outfit → go to shuffle-create page
   const createBtn = document.getElementById("create-outfit-btn");
   if (createBtn) {
-    createBtn.addEventListener("click", () => {
-      window.dispatchEvent(
-        new CustomEvent("navigate", { detail: { page: "create-outfit" } })
-      );
-    });
+    const handler = () => {
+        window.dispatchEvent(
+          new CustomEvent("navigate", { detail: { page: "create-outfit" } })
+        );
+    };
+    createBtn.addEventListener("click", handler);
+    cleanupFns.push(() => createBtn.removeEventListener("click", handler));
   }
 }
 

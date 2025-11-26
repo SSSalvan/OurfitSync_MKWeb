@@ -1,12 +1,14 @@
 // ---------------------------------------------
-// CALENDAR PAGE — EXPRESS BACKEND VERSION
+// CALENDAR PAGE — EXPRESS BACKEND VERSION (DIUBAH)
 // ---------------------------------------------
 import { auth } from "../firebase-init.js";
+// --- BARU: Import fungsi API
+import { fetchCalendarEvents } from "../utils/api.js"; 
 
 let eventsByDate = {}; 
 let cleanupFns = [];
 
-const API_BASE = "http://localhost:5050/api";
+// const API_BASE = "https://ourfit-sync-mk-web.vercel.app/api"; // <-- DIHAPUS
 
 const timeIcons = {
   morning: "images/morning.png",
@@ -50,38 +52,30 @@ export function initCalendarPage() {
   }
 
   // ----------------------------------------------------
-  // LOAD EVENTS FROM EXPRESS BACKEND
+  // LOAD EVENTS DENGAN API.JS
   // ----------------------------------------------------
   async function loadEventsForMonth() {
-    console.log("FETCHING =", `${API_BASE}/calendar/user/${auth.currentUser?.uid}`);
     const user = auth.currentUser;
     if (!user) {
       eventsByDate = {};
       return;
     }
 
-    let res;
     try {
-      res = await fetch(`${API_BASE}/calendar/user/${user.uid}`);
+      // --- DIUBAH: Menggunakan fungsi terpusat dari api.js
+      const data = await fetchCalendarEvents(user.uid); 
+
+      const map = {};
+      data.forEach(evt => {
+        if (!map[evt.date]) map[evt.date] = [];
+        map[evt.date].push(evt);
+      });
+
+      eventsByDate = map;
     } catch (err) {
-      console.error("❌ Failed to reach backend:", err);
-      return;
+      console.error("❌ Failed to load events:", err);
+      eventsByDate = {}; 
     }
-
-    if (!res.ok) {
-      console.error("❌ Failed to load events:", await res.text());
-      return;
-    }
-
-    const data = await res.json();
-
-    const map = {};
-    data.forEach(evt => {
-      if (!map[evt.date]) map[evt.date] = [];
-      map[evt.date].push(evt);
-    });
-
-    eventsByDate = map;
   }
 
 
@@ -115,84 +109,97 @@ export function initCalendarPage() {
         dayNumber = i - (firstDayIndex + daysInMonth) + 1;
         cell.classList.add("other-month");
       } else {
-        inMonth = true;
         dayNumber = i - firstDayIndex + 1;
+        inMonth = true;
       }
 
-      const label = document.createElement("span");
-      label.className = "day-number";
-      label.textContent = dayNumber;
-
-      const dayContent = document.createElement("div");
-      dayContent.className = "day-content";
-      dayContent.appendChild(label);
-
-      let dateKey = null;
-      let outfit = null;
-
+      cell.innerHTML = `<span class="day-number">${dayNumber}</span>`;
+      
+      let dateString;
       if (inMonth) {
-        const yyyy = year;
         const mm = String(month + 1).padStart(2, "0");
         const dd = String(dayNumber).padStart(2, "0");
-        dateKey = `${yyyy}-${mm}-${dd}`;
-        cell.dataset.date = dateKey;
+        dateString = `${year}-${mm}-${dd}`;
 
-        const events = eventsByDate[dateKey];
-        if (events && events.length > 0) outfit = events[0].outfit;
+        cell.dataset.date = dateString;
+      } else {
+        // Date strings for other months can be calculated, but often not needed
+        dateString = null;
       }
 
-      const thumbGrid = document.createElement("div");
-      thumbGrid.className = "day-outfit-grid";
+      // Highlighting today
+      if (
+        inMonth &&
+        year === today.getFullYear() &&
+        month === today.getMonth() &&
+        dayNumber === today.getDate()
+      ) {
+        cell.classList.add("today");
+      }
 
-      const order = ["Top", "Bag", "Bottom", "Shoes"];
-      order.forEach((cat) => {
-        const slot = document.createElement("div");
-        slot.className = "day-outfit-slot";
-
-        if (outfit && outfit[cat] && outfit[cat].imageUrl) {
-          const img = document.createElement("img");
-          img.src = outfit[cat].imageUrl;
-          img.className = "day-outfit-img";
-          slot.appendChild(img);
-        }
-        thumbGrid.appendChild(slot);
-      });
-
-      dayContent.appendChild(thumbGrid);
-      cell.appendChild(dayContent);
-
-      if (inMonth) cell.addEventListener("click", () => handleDayClick(cell));
-
+      // Check for events
+      if (inMonth && eventsByDate[dateString] && eventsByDate[dateString].length > 0) {
+        cell.classList.add("has-event");
+        cell.innerHTML += `<div class="event-dot"></div>`;
+      }
+      
+      // Select Date Handler
+      if (inMonth) {
+        const handler = () => selectDate(dateString);
+        cell.addEventListener("click", handler);
+        cleanupFns.push(() => cell.removeEventListener("click", handler));
+      }
+      
       grid.appendChild(cell);
     }
+    
+    // Select today by default on initial load
+    if (state.selectedDate === null) {
+      const todayDateString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+      const todayCell = root.querySelector(`.day-cell[data-date="${todayDateString}"]`);
+      if (todayCell) {
+        selectDate(todayDateString);
+      } else {
+        // Fallback for month view
+        selectDate(null);
+      }
+    } else {
+        // Re-select current date on month change
+        selectDate(state.selectedDate, true);
+    }
+  }
 
-    eventsDateEl.textContent = "Select a date";
+  // ----------------------------------------------------
+  // SELECT DATE
+  // ----------------------------------------------------
+  function selectDate(dateString, isRebuild = false) {
+    eventsDateEl.textContent = "No Events";
     eventItemEl.style.display = "none";
-  }
+    eventItemEl.style.cursor = "default";
 
-  // ----------------------------------------------------
-  // SELECT DAY
-  // ----------------------------------------------------
-  function clearSelected() {
-    const prev = grid.querySelector(".day-highlighted");
-    if (prev) prev.classList.remove("day-highlighted");
-  }
+    // Update state and active cell
+    if (dateString) {
+        state.selectedDate = dateString;
+        eventsDateEl.textContent = new Date(dateString + 'T00:00:00').toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' });
+        
+        // Remove active class from all cells
+        if (!isRebuild) {
+            root.querySelectorAll(".day-cell.selected").forEach(c => c.classList.remove("selected"));
+        }
+        
+        // Add active class to the selected cell
+        const selectedCell = root.querySelector(`.day-cell[data-date="${dateString}"]`);
+        if (selectedCell) selectedCell.classList.add("selected");
+    }
 
-  function handleDayClick(cell) {
-    clearSelected();
-    cell.classList.add("day-highlighted");
+    // Load Events
+    const events = eventsByDate[dateString] || [];
 
-    const dateKey = cell.dataset.date;
-    const [y, m, d] = dateKey.split("-").map(Number);
+    // Clear previous event handler
+    cleanupFns.forEach(fn => fn());
+    cleanupFns = [];
 
-    eventsDateEl.textContent = `${d} ${monthNames[m - 1]} ${y}`;
-
-    const events = eventsByDate[dateKey];
-
-    if (!events || events.length === 0) {
-      eventTextEl.textContent = "No event.";
-      eventIconEl.innerHTML = "";
-      eventItemEl.style.display = "flex";
+    if (events.length === 0) {
       return;
     }
 
@@ -234,7 +241,10 @@ export function initCalendarPage() {
     monthDropdownEl.appendChild(li);
   });
 
+
+  // ----------------------------------------------------
   // INITIAL LOAD
+  // ----------------------------------------------------
   (async () => {
     await loadEventsForMonth();
     buildCalendar();
@@ -242,6 +252,6 @@ export function initCalendarPage() {
 }
 
 export function cleanupCalendarPage() {
-  cleanupFns.forEach((fn) => fn());
+  cleanupFns.forEach(fn => fn());
   cleanupFns = [];
 }

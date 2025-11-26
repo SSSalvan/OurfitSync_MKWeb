@@ -7,7 +7,8 @@ import {
   uploadBytes,
   getDownloadURL,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
-import { addWardrobeItem } from "../utils/api.js";
+// --- Sudah benar, menggunakan fungsi API
+import { addWardrobeItem } from "../utils/api.js"; 
 
 let outfitData = {};
 let fileInput = null;
@@ -39,116 +40,88 @@ export const initAddPagePage = () => {
   const nextBtns = document.querySelectorAll(".next-step-btn");
   const backBtns = document.querySelectorAll(".back-step-btn");
 
-  // --- STEP NAVIGATION (NEXT/BACK) ---
-  nextStepHandlers = [];
-  backStepHandlers = [];
+  // Step 1: Upload
+  fileInput = document.getElementById("file-input");
 
+  handleUploadTrigger = () => {
+    fileInput.click();
+  };
+  triggerUploadBtn.addEventListener("click", handleUploadTrigger);
+  iconUploadArea.addEventListener("click", handleUploadTrigger);
+
+  fileInputChangeHandler = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Tampilkan preview
+      const previewImg = document.getElementById("upload-preview");
+      previewImg.src = URL.createObjectURL(file);
+      document.getElementById("upload-card-content").style.display = "none";
+      document.getElementById("upload-preview-container").style.display = "block";
+
+      outfitData.file = file;
+      goToStep("step-2-details");
+    }
+  };
+  fileInput.addEventListener("change", fileInputChangeHandler);
+
+  // Navigasi antar step
   nextBtns.forEach((btn) => {
+    const target = btn.dataset.target;
     const handler = () => {
-      const target = btn.getAttribute("data-target");
-      if (target) goToStep(target);
+      if (target === "step-2-details" && !outfitData.file) return alert("Please upload an image first.");
+      goToStep(target);
     };
     btn.addEventListener("click", handler);
     nextStepHandlers.push({ btn, handler });
   });
 
   backBtns.forEach((btn) => {
-    const handler = () => {
-      const target = btn.getAttribute("data-target");
-      if (target) goToStep(target);
-    };
+    const target = btn.dataset.target;
+    const handler = () => goToStep(target);
     btn.addEventListener("click", handler);
     backStepHandlers.push({ btn, handler });
   });
 
-  // --- FILE INPUT (HIDDEN) ---
-  if (!fileInput) {
-    fileInput = document.createElement("input");
-    fileInput.type = "file";
-    fileInput.accept = "image/*";
-    fileInput.style.display = "none";
-    document.body.appendChild(fileInput);
-  }
-
-  // Trigger file input saat tombol atau area icon diklik
-  handleUploadTrigger = () => fileInput.click();
-
-  if (triggerUploadBtn) {
-    triggerUploadBtn.addEventListener("click", handleUploadTrigger);
-  }
-  if (iconUploadArea) {
-    iconUploadArea.addEventListener("click", handleUploadTrigger);
-  }
-
-  // Saat file dipilih
-  fileInputChangeHandler = (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    outfitData.imageFile = file;
-
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const preview1 = document.getElementById("outfit-image-preview");
-      const preview2 = document.getElementById("outfit-image-final");
-
-      if (preview1) preview1.src = e.target.result;
-      if (preview2) preview2.src = e.target.result;
-
-      // Pindah ke Step 2 (Scanning)
-      goToStep("step-2");
-
-      // Simulasi scanning, lalu ke Step 3
-      setTimeout(() => {
-        goToStep("step-3");
-      }, 1500);
-    };
-    reader.readAsDataURL(file);
-  };
-
-  fileInput.onchange = fileInputChangeHandler;
-
-  // --- SIMPAN KE STORAGE + BACKEND ---
-  if (saveButton) {
+  // Step 3: Save Logic
+  if (saveButton && currentUser) {
     saveClickHandler = async () => {
-      const typeEl = document.getElementById("outfit-type");
-      const colorEl = document.getElementById("outfit-color");
+      saveButton.textContent = "Saving...";
+      saveButton.disabled = true;
 
-      const type = typeEl ? typeEl.value : "";
-      const color = colorEl ? colorEl.value.trim() : "";
+      const name = document.getElementById("outfit-name").value;
+      const category = document.getElementById("outfit-category").value;
 
-      if (!outfitData.imageFile) {
-        alert("Gambar belum dipilih!");
+      if (!name || !category) {
+        alert("Name and Category are required!");
+        saveButton.textContent = "Done";
+        saveButton.disabled = false;
         return;
       }
-      if (!type || !color) {
-        alert("Mohon lengkapi Tipe dan Warna pakaian.");
-        return;
-      }
 
+      let imageUrl = null;
       try {
-        saveButton.textContent = "Saving...";
-        saveButton.disabled = true;
+        // 1. Upload Gambar ke Firebase Storage
+        const file = outfitData.file;
+        const fileName = `${currentUser.uid}/${Date.now()}_${file.name}`;
+        const storageRef = ref(storage, fileName);
+        
+        await uploadBytes(storageRef, file);
+        imageUrl = await getDownloadURL(storageRef);
 
-        // 1. Upload ke Firebase Storage
-        const filename = `outfits/${Date.now()}_${outfitData.imageFile.name}`;
-        const storageRef = ref(storage, filename);
-        await uploadBytes(storageRef, outfitData.imageFile);
-        const imageUrl = await getDownloadURL(storageRef);
-
-        // 2. Simpan data ke Backend lewat addWardrobeItem
-        const newItem = {
-          type: type,
-          category: type, // masih sama seperti sebelumnya
-          color: color,
-          imageUrl: imageUrl,
-          userId: currentUser ? currentUser.uid : "guest",
-          isLiked: false,
+        // 2. Simpan Data ke Vercel API
+        const itemData = {
+          userId: currentUser.uid,
+          name: name,
+          category: category,
+          imageUrl: imageUrl, // URL gambar dari Firebase Storage
+          timestamp: new Date().toISOString(),
+          // Anda bisa tambahkan field lain seperti color, tags, dll.
         };
 
-        await addWardrobeItem(newItem);
+        // --- Sudah benar: Menggunakan fungsi terpusat dari api.js
+        await addWardrobeItem(itemData); 
 
-        alert("Outfit saved successfully!");
+        alert("Item added successfully!");
         window.loadPage("wardrobe");
       } catch (error) {
         console.error("Gagal:", error);
@@ -191,12 +164,7 @@ export const cleanupAddPagePage = () => {
 
   // Clear save button handler
   const saveButton = document.getElementById("save-outfit-btn");
-  if (saveButton) {
+  if (saveButton && saveClickHandler) {
     saveButton.onclick = null;
-  }
-
-  // Clear fileInput onchange
-  if (fileInput) {
-    fileInput.onchange = null;
   }
 };
