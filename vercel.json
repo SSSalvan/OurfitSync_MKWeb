@@ -2,14 +2,28 @@
   "version": 2,
   "builds": [
     {
-      "src": "backend/index.js", 
+      // Menunjukkan Vercel bahwa file server Anda (index.js) ada di root
+      "src": "index.js", 
       "use": "@vercel/node"
     }
   ],
   "routes": [
+    // 1. ROUTE API: Meneruskan SEMUA request ke /api/ ke index.js
     {
-      "src": "/(.*)",
-      "dest": "backend/index.js" 
+      "src": "/api/(.*)",
+      "dest": "/index.js" 
+    },
+    // 2. ROUTE ROOT: Mengarahkan request '/' ke index.html di public/
+    {
+      "src": "/",
+      "dest": "/public/index.html"
+    },
+    // 3. ROUTE ASSET STATIS: Vercel akan melayani semua file di folder 'public' secara otomatis.
+    // Kita tidak perlu route eksplisit untuk setiap asset (seperti /app.js, /page-style/*)
+    // karena Vercel akan mencari file di public/ jika tidak ada route yang cocok.
+    {
+      "src": "/(.*\\.(?:js|css|png|jpg|jpeg|gif|ico|svg))",
+      "dest": "/public/$1"
     }
   ]
 }

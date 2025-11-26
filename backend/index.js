@@ -6,18 +6,19 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import admin from "firebase-admin";
-import path from "path";
+// Path dan fs tidak diperlukan lagi untuk serving statis/root
+import path from "path"; 
 import { fileURLToPath } from "url"; 
-import fs from "fs"; 
+// import fs from "fs"; // Tidak diperlukan lagi
 
 // ---------------------------------------------------------------
 // Environment + Service Account Initialization
 // ---------------------------------------------------------------
 dotenv.config();
 
-// Definisikan __filename dan __dirname di ES Module (Node.js modern)
+// Definisikan __filename dan __dirname di ES Module (masih diperlukan untuk path admin)
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename); // __dirname adalah root proyek Anda
+const __dirname = path.dirname(__filename); 
 
 // LOGIC BARU: Menggunakan Environment Variable untuk Vercel
 if (!admin.apps.length) {
@@ -41,7 +42,7 @@ if (!admin.apps.length) {
 const db = admin.firestore();
 
 // ---------------------------------------------------------------
-// Express Setup & MIDDLEWARE
+// Express Setup & MIDDLEWARE (Hanya untuk API)
 // ---------------------------------------------------------------
 const app = express();
 
@@ -72,37 +73,20 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 
 // ---------------------------------------------------------------
-// PENTING: MAPPING FILE STATIS (KOREKSI PATH)
+// PENTING: MAPPING FILE STATIS DIHAPUS
 // ---------------------------------------------------------------
-// Karena index.js berada di root, dan semua asset ada di 'public', 
-// kita harus mengarahkan request URL ke folder 'public'.
-
-// Menggunakan folder 'public' sebagai root statis. 
-// Contoh: URL /page-style/main.css akan mencari file di /public/page-style/main.css
-app.use(express.static(path.join(__dirname, 'public'))); 
+// Baris ini dihapus karena Vercel.json yang melayani:
+// app.use(express.static(path.join(__dirname, 'public'))); 
 
 
 // ---------------------------------------------------------------
-// ROOT & HEALTH CHECK
+// ROOT & HEALTH CHECK DIHAPUS
 // ---------------------------------------------------------------
-// Route Root: Mencoba melayani index.html yang berada di folder 'public'
-app.get("/", (req, res) => {
-  try {
-    // Path ke index.html harus disesuaikan: /public/index.html
-    const filePath = path.join(__dirname, 'public', 'index.html');
-    if (fs.existsSync(filePath)) {
-      res.sendFile(filePath);
-    } else {
-      // Jika index.html hilang (misalnya di Vercel deployment), tampilkan status API
-      res.status(200).send("OutfitSync API is running. Missing index.html in /public folder.");
-    }
-  } catch (e) {
-    res.status(500).send("Error serving root: " + e.message);
-  }
-});
+// Route '/' dihapus, karena vercel.json sekarang mengarahkannya ke index.html
+
 
 // ---------------------------------------------------------------
-// WARDROBE ROUTES (Tetap sama)
+// WARDROBE ROUTES
 // --------------------------------------------------------------
 // POST /api/wardrobe: Add new item
 app.post("/api/wardrobe", async (req, res) => {
@@ -151,7 +135,7 @@ app.get("/api/wardrobe", async (req, res) => {
 
 
 // --------------------------------------------------------------
-// CALENDAR ROUTES (Tetap sama)
+// CALENDAR ROUTES
 // --------------------------------------------------------------
 // POST /api/calendar: Save new event
 app.post("/api/calendar", async (req, res) => {
@@ -223,7 +207,7 @@ app.delete("/api/calendar/:id", async (req, res) => {
 
 
 // ---------------------------------------------------------------
-// USER PROFILE (Tetap sama)
+// USER PROFILE 
 // ---------------------------------------------------------------
 // GET /api/users/:uid: Fetch user profile
 app.get("/api/users/:uid", async (req, res) => {
@@ -239,6 +223,6 @@ app.get("/api/users/:uid", async (req, res) => {
 
 
 // ---------------------------------------------------------------
-// Export untuk Vercel (penting untuk Node.js ES Modules)
+// Export untuk Vercel
 // ---------------------------------------------------------------
 export default app;
