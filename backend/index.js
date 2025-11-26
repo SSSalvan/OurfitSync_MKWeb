@@ -3,12 +3,12 @@
 // ---------------------------------------------------------------
 
 import express from "express";
-import cors from "cors"; // Middleware CORS
+import cors from "cors";
 import dotenv from "dotenv";
 import admin from "firebase-admin";
 import path from "path";
-import { fileURLToPath } from "url"; // Diperlukan untuk __dirname di ESM
-import fs from "fs"; // Diperlukan untuk membaca index.html pada root route
+import { fileURLToPath } from "url"; 
+import fs from "fs"; 
 
 // ---------------------------------------------------------------
 // Environment + Service Account Initialization
@@ -17,7 +17,7 @@ dotenv.config();
 
 // Definisikan __filename dan __dirname di ES Module (Node.js modern)
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+const __dirname = path.dirname(__filename); // __dirname adalah root proyek Anda
 
 // LOGIC BARU: Menggunakan Environment Variable untuk Vercel
 if (!admin.apps.length) {
@@ -46,19 +46,16 @@ const db = admin.firestore();
 const app = express();
 
 // --- PERBAIKAN CORS UTAMA ---
-// Origins yang diizinkan, termasuk localhost untuk debugging
 const allowedOrigins = [
-    "http://127.0.0.1:5500", // Visual Studio Code Live Server
-    "http://localhost:5500",  // Localhost biasa
-    "https://ourfit-sync-mk-web.vercel.app" // Domain produksi Anda
+    "http://127.0.0.1:5500", 
+    "http://localhost:5500", 
+    "https://ourfit-sync-mk-web.vercel.app" 
 ];
 
 app.use(cors({ 
     origin: (origin, callback) => {
-        // Izinkan request tanpa origin (seperti dari Postman, cURL, atau server-to-server)
         if (!origin) return callback(null, true); 
         
-        // Cek apakah origin termasuk dalam daftar yang diizinkan
         if (allowedOrigins.indexOf(origin) === -1) {
             const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
             return callback(new Error(msg), false);
@@ -66,25 +63,37 @@ app.use(cors({
         return callback(null, true);
     },
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    credentials: true, // PENTING: Mengizinkan kredensial/cookies (meskipun tidak dipakai sekarang)
-    optionsSuccessStatus: 204 // Untuk preflight requests
+    credentials: true, 
+    optionsSuccessStatus: 204
 }));
 
 
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 
+// ---------------------------------------------------------------
+// PENTING: MAPPING FILE STATIS (KOREKSI PATH)
+// ---------------------------------------------------------------
+// Karena index.js berada di root, dan semua asset ada di 'public', 
+// kita harus mengarahkan request URL ke folder 'public'.
+
+// Menggunakan folder 'public' sebagai root statis. 
+// Contoh: URL /page-style/main.css akan mencari file di /public/page-style/main.css
+app.use(express.static(path.join(__dirname, 'public'))); 
+
 
 // ---------------------------------------------------------------
 // ROOT & HEALTH CHECK
 // ---------------------------------------------------------------
-// Route Root: Mencoba melayani index.html di folder 'public' (asumsi)
+// Route Root: Mencoba melayani index.html yang berada di folder 'public'
 app.get("/", (req, res) => {
   try {
+    // Path ke index.html harus disesuaikan: /public/index.html
     const filePath = path.join(__dirname, 'public', 'index.html');
     if (fs.existsSync(filePath)) {
       res.sendFile(filePath);
     } else {
+      // Jika index.html hilang (misalnya di Vercel deployment), tampilkan status API
       res.status(200).send("OutfitSync API is running. Missing index.html in /public folder.");
     }
   } catch (e) {
@@ -93,13 +102,12 @@ app.get("/", (req, res) => {
 });
 
 // ---------------------------------------------------------------
-// WARDROBE ROUTES
+// WARDROBE ROUTES (Tetap sama)
 // --------------------------------------------------------------
 // POST /api/wardrobe: Add new item
 app.post("/api/wardrobe", async (req, res) => {
   try {
     const newItem = req.body;
-    // Asumsi: body.userId sudah divalidasi di client side sebelum POST
     if (!newItem.userId) {
       return res.status(400).json({ error: "Missing userId in request body" });
     }
@@ -143,7 +151,7 @@ app.get("/api/wardrobe", async (req, res) => {
 
 
 // --------------------------------------------------------------
-// CALENDAR ROUTES (Disusun ulang agar lebih standar)
+// CALENDAR ROUTES (Tetap sama)
 // --------------------------------------------------------------
 // POST /api/calendar: Save new event
 app.post("/api/calendar", async (req, res) => {
@@ -172,7 +180,6 @@ app.get("/api/calendar/user/:userId", async (req, res) => {
         const snap = await db
             .collection("calendarEvents")
             .where("userId", "==", userId)
-            // Tambahkan orderBy atau limit jika diperlukan
             .get();
 
         const events = snap.docs.map((doc) => ({
