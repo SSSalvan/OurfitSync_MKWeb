@@ -3,12 +3,7 @@
   "builds": [
     {
       "src": "backend/index.js",
-      "use": "@vercel/node",
-      "config": {
-        "includeFiles": [
-          "backend/public/**"
-        ]
-      }
+      "use": "@vercel/node"
     }
   ],
   "routes": [
@@ -16,13 +11,14 @@
       "src": "/api/(.*)",
       "dest": "backend/index.js"
     },
-    {
+        {
       "src": "/(.*\\.(css|js|ico|png|jpg|svg))$",
-      "dest": "backend/public/$1"
+      "dest": "frontend/$1"
     },
+    
     {
       "src": "/(.*)",
-      "dest": "backend/public/index.html"
+      "dest": "frontend/index.html"
     }
   ]
 }
