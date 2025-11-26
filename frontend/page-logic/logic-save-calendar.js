@@ -1,7 +1,8 @@
 // ------------------------------------------------------------
-// SAVE CALENDAR PAGE — UI-PERFECT VERSION
+// SAVE CALENDAR PAGE — EXPRESS BACKEND VERSION
 // ------------------------------------------------------------
 import { auth } from "../firebase-init.js";
+import { saveCalendarEvent } from "../utils/api.js";
 
 let currentYear;
 let currentMonth;
@@ -42,17 +43,14 @@ function renderCalendar() {
     let inMonth = false;
 
     if (i < firstDayIndex) {
-      // previous month
       dayNum = daysInPrevMonth - firstDayIndex + 1 + i;
       btn.classList.add("sc-day--disabled");
     }
     else if (i >= firstDayIndex + daysInMonth) {
-      // next month
       dayNum = i - (firstDayIndex + daysInMonth) + 1;
       btn.classList.add("sc-day--disabled");
     }
     else {
-      // current month
       inMonth = true;
       dayNum = i - firstDayIndex + 1;
       btn.classList.add("sc-day--current");
@@ -142,8 +140,7 @@ function setupTimeOptions() {
     const handler = () => {
       buttons.forEach(b => b.classList.remove("is-selected"));
       btn.classList.add("is-selected");
-
-      selectedTimeSlot = btn.dataset.slot; // morning / noon / afternoon / night
+      selectedTimeSlot = btn.dataset.slot;
     };
     btn.addEventListener("click", handler);
     cleanupFns.push(() => btn.removeEventListener("click", handler));
@@ -163,7 +160,7 @@ function getCurrentOutfitSelection() {
 }
 
 // ------------------------------------------------------------
-// SAVE EVENT TO EXPRESS BACKEND
+// SAVE EVENT TO EXPRESS BACKEND (menggunakan API.JS)
 // ------------------------------------------------------------
 async function saveEventToBackend() {
   const user = auth.currentUser;
@@ -202,20 +199,14 @@ async function saveEventToBackend() {
     timestamp: new Date().toISOString()
   };
 
-  // FIX: GANTI DENGAN URL VERCEL ANDA
-  const res = await fetch("https://ourfit-sync-mk-web.vercel.app/api/calendar", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload)
-  });
-
-  if (!res.ok) {
-    console.error(await res.text());
-    return alert("Failed to save.");
+  try {
+    await saveCalendarEvent(payload);
+    alert("Saved!");
+    window.loadPage("calendar");
+  } catch (error) {
+    console.error("Save event error:", error);
+    alert("Failed to save. " + error.message);
   }
-
-  alert("Saved!");
-  window.loadPage("calendar");
 }
 
 // ------------------------------------------------------------

@@ -4,10 +4,11 @@
       <section class="greeting">
         <div class="user-info">
           <img 
-            src="images/profile.png" 
+            src="./images/profile.png" 
             alt="profile" 
             class="profile-img" 
             id="home-user-avatar" 
+            onerror="this.src='./images/avatar.png'"
           />
           <div>
             <h2 id="home-user-name">Hello, Loading...</h2>
@@ -31,11 +32,11 @@
             type="button"
           >
             <div class="calendar-square">
-              <img src="images/calendar-button.png" alt="Calendar" class="calendar-icon-img" />
+              <img src="./images/calendar-button.png" alt="Calendar" class="calendar-icon-img" onerror="this.style.display='none'" />
             </div>
           </button>
         </div>
-      </section>  <!-- ✅ CLOSE GREETING SECTION HERE -->
+      </section>
 
       <section class="section">
         <h3>Your top picks</h3>
