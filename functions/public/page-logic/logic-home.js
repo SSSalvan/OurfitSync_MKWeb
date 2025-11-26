@@ -39,16 +39,24 @@ function updateWeather() {
     const temp = Math.round(data.current.temp_c);
     const cond = data.current.condition.text.toLowerCase();
 
-    let icon = "☀";
-    if (cond.includes("cloud")) icon = "☁";
-    else if (cond.includes("rain")) icon = "🌧";
-    else if (cond.includes("storm") || cond.includes("thunder")) icon = "⛈";
-    else if (cond.includes("snow") || cond.includes("sleet")) icon = "❄";
-    else if (cond.includes("fog") || cond.includes("mist") || cond.includes("haze"))
-      icon = "🌫";
+    let iconSrc = "images/sunny.png";
 
-    weatherElement.textContent = `${temp}°C ${icon}`;
+    if (cond.includes("cloud")) iconSrc = "images/cloudy.png";
+    else if (cond.includes("rain")) iconSrc = "images/rainy.png";
+    else if (cond.includes("storm") || cond.includes("thunder"))
+      iconSrc = "images/storm.png";
+    else if (cond.includes("snow") || cond.includes("sleet"))
+      iconSrc = "images/snow.png";
+    else if (cond.includes("fog") || cond.includes("mist") || cond.includes("haze"))
+      iconSrc = "images/fog.png";
+
+    // Update DOM
+    weatherElement.innerHTML = `
+      <span>${temp}°C</span>
+      <img src="${iconSrc}" alt="weather icon" class="weather-icon">
+    `;
   };
+
 
   if ("geolocation" in navigator) {
     navigator.geolocation.getCurrentPosition(

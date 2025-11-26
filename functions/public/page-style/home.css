@@ -93,7 +93,7 @@
 .date-box .temp {
   display: block;
   margin-top: 0.25rem;
-  font-weight: 200;
+  font-weight: 400;
   color: #000;
 }
 
@@ -169,4 +169,13 @@
   font-style: italic;
   font-size: 0.9rem;
   padding: 1rem;
+}
+
+/* Smaller weather icon */
+.weather-icon {
+  width: 25px;
+  height: 25px;
+  object-fit: contain;
+  margin-left: 6px;
+  vertical-align: middle;
 }
