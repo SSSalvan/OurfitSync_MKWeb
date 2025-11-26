@@ -6,25 +6,39 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import admin from "firebase-admin";
-import fs from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
+// import fs from "fs"; // Tidak diperlukan lagi di Vercel jika pakai Env Var
+// import path from "path"; // Tidak diperlukan lagi untuk auth
+// import { fileURLToPath } from "url"; // Tidak diperlukan lagi
 
 // ---------------------------------------------------------------
 // Environment + Service Account
 // ---------------------------------------------------------------
 dotenv.config();
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const serviceAccountPath = path.join(__dirname, "serviceAccountKey.json");
-const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, "utf8"));
+// LOGIC BARU: Menggunakan Environment Variable untuk Vercel
+// Jangan lupa masukkan isi file serviceAccountKey.json ke dalam 
+// Environment Variable bernama "FIREBASE_SERVICE_ACCOUNT" di dashboard Vercel.
 
 if (!admin.apps.length) {
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-  });
+  try {
+    if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+      // Jika di Vercel (Production)
+      const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+      admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount),
+      });
+    } else {
+      // Fallback untuk Local Development (jika file ada)
+      // Pastikan file serviceAccountKey.json ada di root folder jika ingin test lokal
+      // const serviceAccount = await import("./serviceAccountKey.json", { assert: { type: "json" } });
+      // admin.initializeApp({
+      //   credential: admin.credential.cert(serviceAccount.default),
+      // });
+      console.warn("Warning: FIREBASE_SERVICE_ACCOUNT env not found.");
+    }
+  } catch (error) {
+    console.error("Firebase admin initialization error:", error);
+  }
 }
 
 const db = admin.firestore();
@@ -33,7 +47,7 @@ const db = admin.firestore();
 // Express Setup
 // ---------------------------------------------------------------
 const app = express();
-const PORT = process.env.PORT || 5050;
+// const PORT = process.env.PORT || 5050; // Tidak diperlukan di Vercel
 
 app.use(cors({ origin: "*" }));
 app.use(express.json({ limit: "10mb" }));
@@ -42,7 +56,7 @@ app.use(express.json({ limit: "10mb" }));
 // Root Health Check
 // ---------------------------------------------------------------
 app.get("/", (req, res) => {
-  res.send("OutfitSync backend is running.");
+  res.send("OutfitSync backend is running on Vercel.");
 });
 
 // ---------------------------------------------------------------
@@ -101,17 +115,7 @@ app.delete("/api/calendar/:id", async (req, res) => {
 });
 
 // ---------------------------------------------------------------
-// WARDROBE ROUTES  — FIXED BASED ON YOUR FIRESTORE STRUCTURE
-// ---------------------------------------------------------------
-//
-// Your Firestore structure:
-// wardrobeItems
-//   └── <uid>
-//         ├── <autoItemId1>
-//         ├── <autoItemId2>
-//         ├── ...
-//
-// Each <autoItemId> is an item document.
+// WARDROBE ROUTES
 // ---------------------------------------------------------------
 
 // Create wardrobe item (matching Home's structure)
@@ -181,9 +185,4 @@ app.post("/api/users/:uid", async (req, res) => {
   }
 });
 
-// ---------------------------------------------------------------
-// START SERVER
-// ---------------------------------------------------------------
-app.listen(PORT, () => {
-  console.log(`🚀 OutfitSync backend running at http://localhost:${PORT}`);
-});
+export default app;
