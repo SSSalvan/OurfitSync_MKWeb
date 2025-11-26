@@ -1,7 +1,6 @@
+// backend/index.js
 import app from "./server.js";
 
-const PORT = process.env.PORT || 3001;
-
-app.listen(PORT, () => {
-  console.log(`Backend running on port ${PORT}`);
-});
+// JANGAN gunakan app.listen() untuk Vercel!
+// Vercel membutuhkan kita untuk mengekspor aplikasi express sebagai handler.
+export default app;
