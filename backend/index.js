@@ -6,38 +6,43 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 import admin from "firebase-admin";
-// import fs from "fs"; // Tidak diperlukan lagi di Vercel jika pakai Env Var
-// import path from "path"; // Tidak diperlukan lagi untuk auth
-// import { fileURLToPath } from "url"; // Tidak diperlukan lagi
+import path from "path";
+import { fileURLToPath } from "url"; // Diperlukan untuk __dirname di ESM
 
 // ---------------------------------------------------------------
 // Environment + Service Account
 // ---------------------------------------------------------------
 dotenv.config();
 
-// LOGIC BARU: Menggunakan Environment Variable untuk Vercel
-// Jangan lupa masukkan isi file serviceAccountKey.json ke dalam 
-// Environment Variable bernama "FIREBASE_SERVICE_ACCOUNT" di dashboard Vercel.
+// Definisikan __dirname di ES Module (Node.js modern)
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
+// LOGIC BARU: Menggunakan Environment Variable untuk Vercel
 if (!admin.apps.length) {
   try {
     if (process.env.FIREBASE_SERVICE_ACCOUNT) {
-      // Jika di Vercel (Production)
+      // 1. Jika di Vercel: Gunakan Environment Variable
       const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
       admin.initializeApp({
         credential: admin.credential.cert(serviceAccount),
       });
+      console.log("Firebase Admin Initialized from Vercel Env.");
     } else {
-      // Fallback untuk Local Development (jika file ada)
-      // Pastikan file serviceAccountKey.json ada di root folder jika ingin test lokal
-      // const serviceAccount = await import("./serviceAccountKey.json", { assert: { type: "json" } });
-      // admin.initializeApp({
-      //   credential: admin.credential.cert(serviceAccount.default),
-      // });
-      console.warn("Warning: FIREBASE_SERVICE_ACCOUNT env not found.");
+      // 2. Fallback jika Environment Variable tidak ditemukan
+      console.warn("Warning: FIREBASE_SERVICE_ACCOUNT env not found. Running without Admin SDK initialization.");
+      
+      // Jika Anda ingin mencoba menjalankan API lokal tanpa Service Account Key,
+      // Anda bisa menghapus atau mengomentari baris di atas, tapi ini berbahaya
+      // karena API membutuhkan akses Firestore. Untuk deploy di Vercel, pastikan Env Var terisi.
     }
   } catch (error) {
-    console.error("Firebase admin initialization error:", error);
+    console.error("Firebase admin initialization error during JSON parse or startup:", error.message);
+    // Jika JSON.parse gagal, ini akan mencatat error 500 dan crash.
+    // Pastikan JSON yang di-paste di Vercel benar-benar murni JSON string.
+    
+    // Melempar error agar Vercel mencatat crash dengan jelas
+    throw new Error("Failed to initialize Firebase Admin SDK. Check FIREBASE_SERVICE_ACCOUNT variable.");
   }
 }
 
@@ -47,20 +52,37 @@ const db = admin.firestore();
 // Express Setup
 // ---------------------------------------------------------------
 const app = express();
-// const PORT = process.env.PORT || 5050; // Tidak diperlukan di Vercel
 
 app.use(cors({ origin: "*" }));
 app.use(express.json({ limit: "10mb" }));
 
-// ---------------------------------------------------------------
-// Root Health Check
-// ---------------------------------------------------------------
-app.get("/", (req, res) => {
-  res.send("OutfitSync backend is running on Vercel.");
-});
+
+// --- PENTING: STATIC FILE SERVING UNTUK FRONTEND ---
+// Ini memungkinkan Vercel menyajikan file dari folder public/
+// Folder public harus berada di dalam folder backend/ (Root Directory Vercel)
+app.use(express.static(path.join(__dirname, 'public')));
+
 
 // ---------------------------------------------------------------
-// CALENDAR ROUTES
+// Root & Health Check (Mengembalikan index.html atau Pesan Teks)
+// ---------------------------------------------------------------
+
+app.get("/", (req, res) => {
+    // Coba kirim index.html jika ada (jika frontend di-host bersama)
+    // Jika folder public Anda berisi index.html, ini akan menampilkannya.
+    const indexPath = path.join(__dirname, 'public', 'index.html');
+    
+    if (fs.existsSync(indexPath)) {
+        res.sendFile(indexPath);
+    } else {
+        // Jika tidak ada index.html, kirim pesan teks
+        res.send("OutfitSync backend is running on Vercel. Frontend files not found at root.");
+    }
+});
+
+
+// ---------------------------------------------------------------
+// CALENDAR ROUTES (Tetap sama)
 // ---------------------------------------------------------------
 
 // Create event
@@ -115,7 +137,7 @@ app.delete("/api/calendar/:id", async (req, res) => {
 });
 
 // ---------------------------------------------------------------
-// WARDROBE ROUTES
+// WARDROBE ROUTES (Tetap sama)
 // ---------------------------------------------------------------
 
 // Create wardrobe item (matching Home's structure)
@@ -160,7 +182,7 @@ app.get("/api/wardrobe", async (req, res) => {
 
 
 // ---------------------------------------------------------------
-// USER PROFILE (unchanged)
+// USER PROFILE (Tetap sama)
 // ---------------------------------------------------------------
 app.get("/api/users/:uid", async (req, res) => {
   try {
