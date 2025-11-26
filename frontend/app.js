@@ -10,9 +10,12 @@ let currentLayoutStyle = null;
 let currentPageScript = null;
 let currentCleanupFunction = () => {};
 
+/* ---------------------------------------
+   LOAD HTML FILES
+---------------------------------------- */
 async function loadHtml(path, targetElement) {
   try {
-    const response = await fetch(path);
+    const response = await fetch(`./${path}`); // RELATIVE PATH FIXED
     if (!response.ok) throw new Error(`File ${path} not found`);
     targetElement.innerHTML = await response.text();
   } catch (error) {
@@ -21,10 +24,13 @@ async function loadHtml(path, targetElement) {
   }
 }
 
+/* ---------------------------------------
+   LOAD SCRIPT (MODULE)
+---------------------------------------- */
 function loadScript(path, isModule = true) {
-  if (currentPageScript) currentPageScript.remove();
+  removePageScript();
   const script = document.createElement("script");
-  script.src = path;
+  script.src = `./${path}`; // RELATIVE PATH FIXED
   if (isModule) script.type = "module";
   script.id = "page-script";
   document.body.appendChild(script);
@@ -38,40 +44,47 @@ function removePageScript() {
   }
 }
 
+/* ---------------------------------------
+   STYLE LOADERS
+---------------------------------------- */
 function loadPersistentStyle(path) {
   const link = document.createElement("link");
   link.rel = "stylesheet";
-  link.href = path;
+  link.href = `./${path}`; // FIXED
   document.head.appendChild(link);
 }
 
 function loadLayoutStyle(layoutName) {
   if (currentLayoutStyle) currentLayoutStyle.remove();
+
   if (layoutName) {
     const link = document.createElement("link");
     link.rel = "stylesheet";
-    link.href = `page-style/${layoutName}.css`;
+    link.href = `./page-style/${layoutName}.css`; // FIXED
     document.head.appendChild(link);
     currentLayoutStyle = link;
-  } else {
-    currentLayoutStyle = null;
   }
 }
 
 function loadPageStyle(pageName) {
   if (currentPageStyle) currentPageStyle.remove();
+
   const link = document.createElement("link");
   link.rel = "stylesheet";
-  link.href = `page-style/${pageName}.css`;
+  link.href = `./page-style/${pageName}.css`; // FIXED
   document.head.appendChild(link);
   currentPageStyle = link;
 }
 
+/* ---------------------------------------
+   MAIN PAGE LOADER
+---------------------------------------- */
 window.loadPage = async (pageName, params = {}) => {
   currentCleanupFunction();
   removePageScript();
 
-  const authPages = ["login", "signup", "verify", "verified"];
+  const authPages = ["login", "signup", "verify", "verified", "landing"];
+
   if (authPages.includes(pageName)) {
     loadLayoutStyle("auth-layout");
     sidebarContainer.style.display = "none";
@@ -79,6 +92,7 @@ window.loadPage = async (pageName, params = {}) => {
     loadLayoutStyle(null);
     sidebarContainer.style.display = "block";
   }
+
   loadPageStyle(pageName);
 
   await loadHtml(`pages/${pageName}.html`, appRoot);
@@ -94,6 +108,9 @@ window.loadPage = async (pageName, params = {}) => {
   initializePageEvents(pageName, params);
 };
 
+/* ---------------------------------------
+   DYNAMIC PAGE LOGIC IMPORT
+---------------------------------------- */
 const toPascalCase = (s) =>
   s
     .split("-")
@@ -105,9 +122,7 @@ async function initializePageEvents(pageName, params = {}) {
 
   try {
     if (pageName === "landing") {
-      setTimeout(() => {
-        window.loadPage("login");
-      }, 2000);
+      setTimeout(() => window.loadPage("login"), 2000);
       return;
     }
 
@@ -132,36 +147,35 @@ async function initializePageEvents(pageName, params = {}) {
 
     if (pagesWithLogic.includes(pageName)) {
       const capitalizedName = toPascalCase(pageName);
-      const modulePath = `./page-logic/logic-${pageName}.js`;
+
+      const modulePath = `./page-logic/logic-${pageName}.js`; // FIXED
 
       const module = await import(modulePath);
 
       const initFunc = `init${capitalizedName}Page`;
       const cleanupFunc = `cleanup${capitalizedName}Page`;
 
-      if (module[initFunc]) {
-        module[initFunc](params);
-      }
+      if (module[initFunc]) module[initFunc](params);
 
       currentCleanupFunction = module[cleanupFunc] || (() => {});
     }
   } catch (error) {
-    console.error(error);
+    console.error("Page logic load error:", error);
     currentCleanupFunction = () => {};
   }
 }
 
+/* ---------------------------------------
+   APP INITIALIZER
+---------------------------------------- */
 async function initializeApp() {
   await loadHtml("components/sidebar.html", sidebarContainer);
-
   loadPersistentStyle("page-style/sidebar.css");
   loadScript("components/sidebar.js");
 
   window.addEventListener("navigate", (event) => {
     const pageName = event.detail.page;
-    if (pageName) {
-      window.loadPage(pageName);
-    }
+    if (pageName) window.loadPage(pageName);
   });
 
   onAuthStateChanged(auth, async (user) => {
@@ -169,29 +183,29 @@ async function initializeApp() {
 
     if (user) {
       await user.reload();
-      if (user.emailVerified) {
-        const currentPage = appRoot.firstChild?.id;
-        const authPages = [
-          "login-page",
-          "signup-page",
-          "verify-page",
-          "verified-page",
-          "landing",
-        ];
 
-        if (!currentPage || authPages.includes(currentPage)) {
+      const pageId = appRoot.firstChild?.id;
+      const authPages = [
+        "login-page",
+        "signup-page",
+        "verify-page",
+        "verified-page",
+        "landing",
+      ];
+
+      if (user.emailVerified) {
+        if (!pageId || authPages.includes(pageId)) {
           await window.loadPage("home");
         } else {
-          const simplePageName = currentPage.replace("-page", "");
+          const simplePageName = pageId.replace("-page", "");
           await window.loadPage(simplePageName);
         }
       } else {
-        const currentPage = appRoot.firstChild?.id;
-        if (currentPage !== "verify-page") {
+        if (pageId !== "verify-page") {
           window.loadPage("verify");
         } else {
           const verifyEmailText = document.getElementById("verify-email-text");
-          if (verifyEmailText && user) verifyEmailText.textContent = user.email;
+          if (verifyEmailText) verifyEmailText.textContent = user.email;
         }
       }
     } else {
