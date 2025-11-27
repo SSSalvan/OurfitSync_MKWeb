@@ -18,6 +18,7 @@ export async function saveUserDataToFirestore(user, name) {
 export async function loadUserData(user) {
   if (!user) return;
 
+  // 1. Load Data Teks (Nama, Email, dll)
   try {
     const userData = await fetchUserProfile(user.uid);
     
@@ -40,13 +41,25 @@ export async function loadUserData(user) {
     console.error("Error load user API:", error);
   }
 
+  // 2. Load Gambar Profil (Dengan Fallback yang Benar)
+  const homeAvatar = document.getElementById('home-user-avatar');
+  const profileAvatar = document.getElementById('profile-user-avatar');
+  
+  // Pastikan file ini ada di folder frontend/images/
+  const DEFAULT_AVATAR = './images/avatar.png'; 
+
   try {
     const profileImgRef = ref(storage, `profile_images/${user.uid}.jpg`); 
     const url = await getDownloadURL(profileImgRef);
-    const homeAvatar = document.getElementById('home-user-avatar');
-    const profileAvatar = document.getElementById('profile-user-avatar');
+    
+    // Jika sukses dapat URL dari Storage
     if (homeAvatar) homeAvatar.src = url;
     if (profileAvatar) profileAvatar.src = url;
+
   } catch (error) {
+    // Jika gagal (gambar belum ada di storage), gunakan default lokal
+    console.log("Using default avatar (no custom image found).");
+    if (homeAvatar) homeAvatar.src = DEFAULT_AVATAR;
+    if (profileAvatar) profileAvatar.src = DEFAULT_AVATAR;
   }
 }
