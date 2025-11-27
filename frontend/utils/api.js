@@ -1,4 +1,4 @@
-const API_BASE_URL = "https://ourfit-sync-mk-web15.vercel.app/api";
+const API_BASE_URL = "https://outfitsync-web.vercel.app"";
 
 // =======================================
 // WARDROBE

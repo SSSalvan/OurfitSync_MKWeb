@@ -12,11 +12,12 @@ app.use(express.json({ limit: "10mb" }));
 app.use(
   cors({
     origin: [
-      "https://ourfit-sync-mk-web15.vercel.app",
+      "https://ourfit-sync-mk-web.vercel.app",
       "http://localhost:3000",
       "http://localhost:8000",
       "http://127.0.0.1:3000",
-      "http://127.0.0.1:8000"
+      "http://127.0.0.1:8000",
+      "https://outfitsync-web.vercel.app"
     ],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
