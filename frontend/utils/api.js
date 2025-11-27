@@ -1,4 +1,4 @@
-const API_BASE_URL = "/api";
+const API_BASE_URL = "/api"; // Pastikan Vercel routing benar
 
 // =======================================
 // WARDROBE
@@ -6,11 +6,13 @@ const API_BASE_URL = "/api";
 export async function fetchWardrobe(userId) {
   try {
     const res = await fetch(`${API_BASE_URL}/wardrobe?userId=${userId}`);
+    // Jika backend 500/400, kita throw error
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return await res.json();
   } catch (error) {
     console.error("Fetch wardrobe error:", error);
-    throw error;
+    // Return array kosong agar UI tidak crash
+    return [];
   }
 }
 
@@ -35,7 +37,8 @@ export async function addWardrobeItem(itemData) {
 export async function fetchUserProfile(uid) {
   try {
     const res = await fetch(`${API_BASE_URL}/users/${uid}`);
-    if (!res.ok) return null;
+    // Backend kita sekarang return JSON meskipun user baru (tidak 404)
+    if (!res.ok) return null; 
     return await res.json();
   } catch (error) {
     console.error("Fetch user profile error:", error);
@@ -58,9 +61,7 @@ export async function saveUserProfile(uid, profileData) {
   }
 }
 
-// =======================================
-// CALENDAR APIs
-// =======================================
+// ... Bagian Calendar biarkan seperti semula ...
 export async function fetchCalendarEvents(userId) {
   try {
     const res = await fetch(`${API_BASE_URL}/calendar/user/${userId}`);
@@ -73,44 +74,29 @@ export async function fetchCalendarEvents(userId) {
 }
 
 export async function saveCalendarEvent(eventData) {
-  try {
     const res = await fetch(`${API_BASE_URL}/calendar`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(eventData),
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(eventData),
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return await res.json();
-  } catch (error) {
-    console.error("Save calendar event error:", error);
-    throw error;
-  }
 }
 
 export async function updateCalendarEvent(eventId, eventData) {
-  try {
     const res = await fetch(`${API_BASE_URL}/calendar/${eventId}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(eventData),
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(eventData),
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return await res.json();
-  } catch (error) {
-    console.error("Update calendar event error:", error);
-    throw error;
-  }
 }
 
 export async function deleteCalendarEvent(eventId) {
-  try {
     const res = await fetch(`${API_BASE_URL}/calendar/${eventId}`, {
-      method: "DELETE",
+        method: "DELETE",
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     return res.json();
-  } catch (error) {
-    console.error("Delete calendar event error:", error);
-    throw error;
-  }
 }

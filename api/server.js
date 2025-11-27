@@ -8,15 +8,15 @@ dotenv.config();
 const app = express();
 app.use(express.json({ limit: "10mb" }));
 
-// ✅ FIX: CORS Configuration
+// ✅ FIX: CORS (Izinkan Frontend Vercel & Localhost)
 app.use(
   cors({
     origin: [
-      "https://ourfit-sync-mk-web.vercel.app", // Domain Backend (Opsional)
-      "https://outfitsync-web.vercel.app",     // Domain Frontend Utama
+      "https://ourfit-sync-mk-web.vercel.app",
+      "https://outfitsync-web.vercel.app",
       "http://localhost:3000",
       "http://127.0.0.1:3000",
-      "http://localhost:5500",                 // Live Server VSCode
+      "http://localhost:5500",
       "http://127.0.0.1:5500"
     ],
     credentials: true,
@@ -29,13 +29,13 @@ app.use(
 // FIREBASE ADMIN INIT
 // ======================================
 if (!admin.apps.length) {
-  // Pastikan Environment Variable FIREBASE_SERVICE_ACCOUNT ada di Vercel
   if (process.env.FIREBASE_SERVICE_ACCOUNT) {
     try {
       const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
       admin.initializeApp({
         credential: admin.credential.cert(serviceAccount),
       });
+      console.log("Firebase Admin Initialized");
     } catch (error) {
       console.error("Firebase Init Error: Invalid JSON", error);
     }
@@ -46,45 +46,16 @@ if (!admin.apps.length) {
 
 const db = admin.firestore();
 
-// ======================================
-// HEALTH CHECK
-// ======================================
+// Health Check
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Backend is running' });
 });
 
 // ======================================
-// WARDROBE ROUTES (Updated to 'wardrobeItems')
+// WARDROBE ROUTES (FIX: wardrobeItems)
 // ======================================
 
-// ADD ITEM
-app.post("/api/wardrobe", async (req, res) => {
-  try {
-    const { userId, name, imageUrl, category, color } = req.body;
-
-    if (!userId) {
-      return res.status(400).json({ error: "userId is required" });
-    }
-
-    // ✅ SINKRONISASI: Menggunakan 'wardrobeItems' sesuai Android App
-    const docRef = await db.collection("wardrobeItems").add({
-      userId,
-      name,
-      imageUrl,
-      category,
-      color,
-      createdAt: new Date(),
-      isLiked: false // Default value
-    });
-
-    res.json({ id: docRef.id, message: "Item berhasil ditambahkan" });
-  } catch (err) {
-    console.error("Error adding wardrobe item:", err);
-    res.status(500).json({ error: "Gagal menambahkan item" });
-  }
-});
-
-// GET ALL ITEMS BY USER
+// GET ALL ITEMS
 app.get("/api/wardrobe", async (req, res) => {
   try {
     const { userId } = req.query;
@@ -93,7 +64,7 @@ app.get("/api/wardrobe", async (req, res) => {
       return res.status(400).json({ error: "userId is required" });
     }
 
-    // ✅ SINKRONISASI: Menggunakan 'wardrobeItems' sesuai Android App
+    // ✅ FIX: Gunakan 'wardrobeItems' agar sinkron dengan Android
     const snapshot = await db
       .collection("wardrobeItems")
       .where("userId", "==", userId)
@@ -107,45 +78,70 @@ app.get("/api/wardrobe", async (req, res) => {
     res.json(items);
   } catch (err) {
     console.error("Error fetching wardrobe:", err);
-    // Detail error hanya di console log server, jangan kirim detail ke client
-    res.status(500).json({ error: "Gagal mengambil data dari database" });
+    res.status(500).json({ error: "Gagal mengambil data wardrobe" });
+  }
+});
+
+// ADD ITEM
+app.post("/api/wardrobe", async (req, res) => {
+  try {
+    const { userId, name, imageUrl, category, color } = req.body;
+
+    if (!userId) return res.status(400).json({ error: "userId is required" });
+
+    const docRef = await db.collection("wardrobeItems").add({
+      userId,
+      name,
+      imageUrl,
+      category,
+      color,
+      createdAt: new Date(),
+      isLiked: false
+    });
+
+    res.json({ id: docRef.id, message: "Item berhasil ditambahkan" });
+  } catch (err) {
+    console.error("Error adding item:", err);
+    res.status(500).json({ error: "Gagal menambahkan item" });
   }
 });
 
 // ======================================
-// USER PROFILE ROUTES
+// USER PROFILE ROUTES (Graceful Fallback)
 // ======================================
 
-// GET USER PROFILE
 app.get("/api/users/:uid", async (req, res) => {
   try {
     const uid = req.params.uid;
-    
     if (!uid) return res.status(400).json({ error: "uid is required" });
 
     const doc = await db.collection("users").doc(uid).get();
 
     if (!doc.exists) {
-      return res.status(404).json({ error: "User not found" });
+      // ✅ FIX: JANGAN return 404. Return data default agar Loading UI selesai.
+      console.warn(`User ${uid} not found in DB. Returning default.`);
+      return res.json({
+        uid: uid,
+        name: "User",      // Nama default
+        email: "",
+        notFound: true     // Flag untuk frontend tau ini user baru
+      });
     }
 
     res.json({ uid: uid, ...doc.data() });
   } catch (err) {
     console.error("Error fetching user:", err);
-    res.status(500).json({ error: "Gagal mengambil user" });
+    res.status(500).json({ error: "Internal Server Error fetching user" });
   }
 });
 
-// UPDATE USER PROFILE
 app.put("/api/users/:uid", async (req, res) => {
   try {
     const uid = req.params.uid;
     const data = req.body;
-
     if (!uid) return res.status(400).json({ error: "uid is required" });
 
     await db.collection("users").doc(uid).set(data, { merge: true });
-
     res.json({ message: "Profil berhasil diperbarui" });
   } catch (err) {
     console.error("Error updating user:", err);
@@ -153,9 +149,7 @@ app.put("/api/users/:uid", async (req, res) => {
   }
 });
 
-// ======================================
-// ERROR HANDLER
-// ======================================
+// Error Handler Global
 app.use((err, req, res, next) => {
   console.error("Unhandled error:", err);
   res.status(500).json({ error: "Internal server error" });
