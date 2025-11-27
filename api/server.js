@@ -25,8 +25,6 @@ app.use(
   })
 );
 
-// Preflight request handler
-app.options('*', cors());
 
 // ======================================
 // FIREBASE ADMIN INIT
